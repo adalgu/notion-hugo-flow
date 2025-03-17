@@ -2,7 +2,7 @@ name: Notion to Hugo Sync
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 6시간마다 실행 (필요에 따라 조정 가능)
+    - cron: '0 */1 * * *'  # 1시간마다 실행 (필요에 따라 조정 가능)
   workflow_dispatch:  # 수동 트리거 허용
 
 # 저장소 권한 설정
