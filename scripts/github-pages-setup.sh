@@ -201,9 +201,9 @@ setup_notion_token() {
 run_workflows() {
   print_message "info" "Running GitHub Actions workflows..."
   
-  # Run Hugo build and deploy workflow
+  # Run Hugo build and deploy workflow with buildDrafts flag
   if gh workflow run "Deploy Hugo site to Pages" --repo "$REPO_NAME"; then
-    print_message "success" "Hugo build and deploy workflow started."
+    print_message "success" "Hugo build and deploy workflow started (with buildDrafts enabled)."
   else
     print_message "warning" "Failed to start Hugo workflow. It might be named differently or not exist yet."
   fi
