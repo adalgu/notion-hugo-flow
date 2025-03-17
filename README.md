@@ -291,6 +291,30 @@ docker-compose up
 docker-compose up -d
 ```
 
+### GitHub Pages 자동화 설정
+
+Notion-Hugo 프로젝트를 GitHub Pages에 자동으로 배포하기 위한 자동화 스크립트를 제공합니다:
+
+```bash
+# 스크립트에 실행 권한 부여
+chmod +x scripts/github-pages-setup.sh
+
+# 스크립트 실행 (기본 설정: username.github.io 저장소 사용)
+./scripts/github-pages-setup.sh
+
+# 사용자 지정 저장소 이름 사용
+./scripts/github-pages-setup.sh your-custom-repo-name
+```
+
+이 스크립트는 다음 작업을 자동화합니다:
+1. GitHub 저장소 생성 또는 연결
+2. 코드 푸시
+3. GitHub Pages 활성화
+4. Notion API 토큰 설정
+5. GitHub Actions 워크플로우 실행
+
+자세한 내용은 [GitHub Pages 자동화 설정 가이드](docs/github-pages-automation.md)를 참조하세요.
+
 #### GitHub Actions 예시
 
 `.github/workflows/deploy.yml` 파일 예시:

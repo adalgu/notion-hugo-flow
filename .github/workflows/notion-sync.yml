@@ -5,6 +5,10 @@ on:
     - cron: '0 */6 * * *'  # 6시간마다 실행 (필요에 따라 조정 가능)
   workflow_dispatch:  # 수동 트리거 허용
 
+# 저장소 권한 설정
+permissions:
+  contents: write  # 저장소 콘텐츠에 대한 쓰기 권한
+
 jobs:
   sync:
     runs-on: ubuntu-latest
