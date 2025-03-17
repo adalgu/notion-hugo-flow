@@ -1,4 +1,4 @@
-baseURL: "https://notion-hugo-py.vercel.app/"
+baseURL: "https://gunn.kim"
 title: Exobrain
 paginate.pagerSize: 5
 theme: PaperMod
