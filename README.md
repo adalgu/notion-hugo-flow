@@ -2,6 +2,117 @@
 
 노션 데이터베이스/페이지를 마크다운으로 변환하고, Hugo 빌드 전 오류 파일을 처리하여 완전한 빌드 파이프라인을 제공하는 Python 애플리케이션입니다.
 
+## ✅ 주요 특징 업데이트
+
+### 🔄 증분 렌더링
+- Notion 페이지의 `last_edited_time`과 content hash를 기반으로 변경된 콘텐츠만 재처리
+- `.notion-hugo-state.json` 파일에 증분 정보를 저장하고, GitHub Actions 캐시를 통해 유지함
+
+### 🧼 저장소 구조
+- Markdown, 상태파일 등은 `.gitignore` 처리 → GitHub 저장소는 항상 깨끗하게 유지됨
+- 오직 최종 Hugo 빌드 결과물(`./public/`)만 GitHub Pages로 배포됨
+
+### 🚀 자동화 배포 (GitHub Actions)
+- 완전한 워크플로우 하나로 통합: Notion → Hugo 빌드 → GitHub Pages 배포
+- 워크플로우 실행 시 `.notion-hugo-state.json`을 캐시에서 복원해 증분 유지
+
+### 📄 GitHub Actions 워크플로우 예시
+
+`.github/workflows/notion-hugo-deploy.yml`
+
+```yaml
+name: Notion → Hugo → GitHub Pages
+
+on:
+  schedule:
+    - cron: '0 */1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "deploy"
+  cancel-in-progress: false
+
+env:
+  HUGO_VERSION: 0.128.0
+  PYTHON_VERSION: "3.10"
+  STATE_FILE: .notion-hugo-state.json
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Hugo
+        run: |
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${{ env.HUGO_VERSION }}/hugo_extended_${{ env.HUGO_VERSION }}_linux-amd64.deb
+          sudo dpkg -i ${{ runner.temp }}/hugo.deb
+
+      - name: Install Dart Sass
+        run: sudo snap install dart-sass
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install notion-client python-dotenv pyyaml fs tabulate
+
+      - name: Restore Notion sync state
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STATE_FILE }}
+          key: notion-state-${{ github.ref_name }}
+          restore-keys: |
+            notion-state-
+
+      - name: Generate Markdown from Notion (incremental)
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          python notion_hugo_app.py --incremental --state-file $STATE_FILE
+
+      - name: Setup GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Install Node.js dependencies
+        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
+
+      - name: Build with Hugo
+        env:
+          HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
+          HUGO_ENVIRONMENT: production
+        run: |
+          hugo --minify --buildDrafts --baseURL "${{ steps.pages.outputs.base_url }}/"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+### 🧪 테스트
+```bash
+python notion_hugo_app.py --dry-run
+```
+
 ## 전체 흐름도
 
 ```mermaid
@@ -249,90 +360,6 @@ python notion_hugo_app.py --hugo-args="server -D --bind=0.0.0.0 --port=8080"
    ```
 
 > **참고**: 데이터베이스 설정과 마이그레이션은 서로 대체 관계입니다. 기존 콘텐츠를 유지하려면 마이그레이션을, 새로 시작하려면 데이터베이스 설정을 선택하세요.
-
-### 수동 설정
-
-`notion-hugo.config.yaml` 파일을 직접 수정하여 설정할 수도 있습니다:
-
-```yaml
-mount:
-  manual: true
-  databases:
-    - database_id: "your_database_id"
-      target_folder: "posts"
-  # 개별 페이지 지정 (선택사항)
-  pages:
-    - page_id: "your_page_id"
-      target_folder: "pages"
-```
-
-또는 단일 Notion 페이지에서 하위 데이터베이스와 페이지를 자동으로 가져오도록 설정:
-
-```yaml
-mount:
-  manual: false
-  page_url: "https://www.notion.so/your-workspace/your-page-id"
-```
-
-## 개발 및 운영
-
-### Docker 및 CI/CD 환경
-
-#### Docker 환경 설정
-
-```bash
-# 환경 변수 설정
-echo "NOTION_TOKEN=your_notion_token" > .env
-
-# 개발 서버 실행
-docker-compose up
-
-# 백그라운드에서 실행
-docker-compose up -d
-```
-
-### GitHub Pages 자동화 설정
-
-Notion-Hugo 프로젝트를 GitHub Pages에 자동으로 배포하기 위한 자동화 스크립트를 제공합니다:
-
-```bash
-# 스크립트에 실행 권한 부여
-chmod +x scripts/github-pages-setup.sh
-
-# 스크립트 실행 (기본 설정: username.github.io 저장소 사용)
-./scripts/github-pages-setup.sh
-
-# 사용자 지정 저장소 이름 사용
-./scripts/github-pages-setup.sh your-custom-repo-name
-```
-
-이 스크립트는 다음 작업을 자동화합니다:
-1. GitHub 저장소 생성 또는 연결
-2. 코드 푸시
-3. GitHub Pages 활성화
-4. Notion API 토큰 설정
-5. GitHub Actions 워크플로우 실행
-
-자세한 내용은 [GitHub Pages 자동화 설정 가이드](docs/github-pages-automation.md)를 참조하세요.
-
-#### GitHub Actions 예시
-
-`.github/workflows/deploy.yml` 파일 예시:
-
-```yaml
-name: Build and Deploy Hugo
-
-on:
-  schedule:
-    - cron: '0 */6 * * *'  # 6시간마다 실행
-  workflow_dispatch:  # 수동 트리거 허용
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        
       - name: Set up Python
         uses: actions/setup-python@v4
         with:

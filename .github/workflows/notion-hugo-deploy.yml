@@ -1,0 +1,88 @@
+name: Notion → Hugo → GitHub Pages
+
+on:
+  schedule:
+    - cron: '0 */1 * * *'  # 매시간 실행
+  workflow_dispatch:
+  repository_dispatch:  # ← 이거 추가
+    types: [trigger-hugo-build]  # 이벤트명은 자유롭게 정해도 됨
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "deploy"
+  cancel-in-progress: false
+
+env:
+  HUGO_VERSION: 0.128.0
+  PYTHON_VERSION: "3.10"
+  STATE_FILE: .notion-hugo-state.json
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Hugo
+        run: |
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${{ env.HUGO_VERSION }}/hugo_extended_${{ env.HUGO_VERSION }}_linux-amd64.deb
+          sudo dpkg -i ${{ runner.temp }}/hugo.deb
+
+      - name: Install Dart Sass
+        run: sudo snap install dart-sass
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install notion-client python-dotenv pyyaml fs tabulate
+
+      - name: Restore Notion sync state
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STATE_FILE }}
+          key: notion-state-${{ github.ref_name }}
+          restore-keys: |
+            notion-state-
+
+      - name: Generate Markdown from Notion (incremental)
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          python notion_hugo_app.py --incremental --state-file $STATE_FILE
+
+      - name: Setup GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Install Node.js dependencies
+        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
+
+      - name: Build with Hugo
+        env:
+          HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
+          HUGO_ENVIRONMENT: production
+        run: |
+          hugo --minify --buildDrafts --baseURL "${{ steps.pages.outputs.base_url }}/"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
