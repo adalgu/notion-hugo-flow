@@ -1,6 +1,7 @@
 mount:
   databases:
-  - database_id: 1b87522e-eb2f-81f6-9cc7-e5e1c0bae02d
+  # - database_id: 1b87522e-eb2f-81f6-9cc7-e5e1c0bae02d
+  - database_id: 1b47522e-eb2f-8058-8cdb-df406d2b7990 
     target_folder: posts
   manual: true
 
@@ -12,3 +13,6 @@ filename:
   date_format: "%Y-%m-%d"
   # 한글 제목 처리: "as-is" (그대로 사용), "slug" (슬러그화만)
   korean_title: "slug"
+
+
+https://www.notion.so/datarecipe/1b47522eeb2f80588cdbdf406d2b7990?v=1b47522eeb2f800b80b3000c0a77a3cc&source=copy_link
