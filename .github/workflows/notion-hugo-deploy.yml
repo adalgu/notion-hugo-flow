@@ -58,11 +58,41 @@ jobs:
           restore-keys: |
             notion-state-
 
-      - name: Generate Markdown from Notion (incremental)
+      - name: Determine sync mode
+        id: sync-mode
+        run: |
+          # 커밋 메시지나 태그에 따라 sync 모드 결정
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          REF_NAME="${{ github.ref_name }}"
+          
+          # full-sync 조건들
+          if [[ "$COMMIT_MSG" == *"[full-sync]"* ]] || \
+             [[ "$COMMIT_MSG" == *"[force-rebuild]"* ]] || \
+             [[ "$REF_NAME" == *"full-sync"* ]] || \
+             [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "mode=full-sync" >> $GITHUB_OUTPUT
+            echo "🔄 Full sync mode activated"
+          else
+            echo "mode=incremental" >> $GITHUB_OUTPUT
+            echo "⚡ Incremental sync mode activated"
+          fi
+          
+          echo "Sync mode: $(cat $GITHUB_OUTPUT | grep mode | cut -d'=' -f2)"
+
+      - name: Generate Markdown from Notion
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: |
-          python notion_hugo_app.py --incremental --state-file $STATE_FILE
+          SYNC_MODE="${{ steps.sync-mode.outputs.mode }}"
+          echo "Running with sync mode: $SYNC_MODE"
+          
+          if [[ "$SYNC_MODE" == "full-sync" ]]; then
+            echo "🔄 Executing full synchronization..."
+            python notion_hugo_app.py --full-sync --state-file $STATE_FILE
+          else
+            echo "⚡ Executing incremental synchronization..."
+            python notion_hugo_app.py --incremental --state-file $STATE_FILE
+          fi
 
       - name: Setup GitHub Pages
         id: pages
