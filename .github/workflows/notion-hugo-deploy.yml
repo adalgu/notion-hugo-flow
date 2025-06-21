@@ -62,14 +62,25 @@ jobs:
         id: sync-mode
         run: |
           # 커밋 메시지나 태그에 따라 sync 모드 결정
+          # 여러 방법으로 커밋 메시지 가져오기 시도
           COMMIT_MSG="${{ github.event.head_commit.message }}"
+          if [[ -z "$COMMIT_MSG" ]]; then
+            COMMIT_MSG="$(git log -1 --pretty=%B)"
+          fi
           REF_NAME="${{ github.ref_name }}"
+          EVENT_NAME="${{ github.event_name }}"
+          
+          echo "Debug info:"
+          echo "- Commit message: '$COMMIT_MSG'"
+          echo "- Ref name: '$REF_NAME'"
+          echo "- Event name: '$EVENT_NAME'"
           
           # full-sync 조건들
           if [[ "$COMMIT_MSG" == *"[full-sync]"* ]] || \
              [[ "$COMMIT_MSG" == *"[force-rebuild]"* ]] || \
              [[ "$REF_NAME" == *"full-sync"* ]] || \
-             [[ "${{ github.event_name }}" == "schedule" ]]; then
+             [[ "$EVENT_NAME" == "schedule" ]] || \
+             [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             echo "mode=full-sync" >> $GITHUB_OUTPUT
             echo "🔄 Full sync mode activated"
           else
@@ -77,7 +88,7 @@ jobs:
             echo "⚡ Incremental sync mode activated"
           fi
           
-          echo "Sync mode: $(cat $GITHUB_OUTPUT | grep mode | cut -d'=' -f2)"
+          echo "Final sync mode: $(grep 'mode=' $GITHUB_OUTPUT | cut -d'=' -f2)"
 
       - name: Generate Markdown from Notion
         env:
