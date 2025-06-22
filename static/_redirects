@@ -1,0 +1,5 @@
+# Redirect /post/* to /posts/*
+/post/* /posts/:splat 301
+
+# Redirect old URLs to new URLs
+/archives /posts/ 301

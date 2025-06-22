@@ -1,0 +1,20 @@
+<script>
+// Client-side redirect for /post/* to /posts/*
+(function() {
+    const currentPath = window.location.pathname;
+    
+    // Check if URL starts with /post/ but not /posts/
+    if (currentPath.startsWith('/post/') && !currentPath.startsWith('/posts/')) {
+        const newPath = currentPath.replace('/post/', '/posts/');
+        const newUrl = window.location.origin + newPath + window.location.search + window.location.hash;
+        
+        // Use replace to avoid adding to browser history
+        window.location.replace(newUrl);
+    }
+    
+    // Redirect /archives to /posts/
+    if (currentPath === '/archives' || currentPath === '/archives/') {
+        window.location.replace(window.location.origin + '/posts/');
+    }
+})();
+</script>

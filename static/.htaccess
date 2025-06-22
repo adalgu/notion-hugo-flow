@@ -1,0 +1,6 @@
+# Redirect /post/* to /posts/*
+RewriteEngine On
+RewriteRule ^post/(.*)$ /posts/$1 [R=301,L]
+
+# Redirect /archives to /posts/
+RewriteRule ^archives/?$ /posts/ [R=301,L]
