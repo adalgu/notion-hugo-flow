@@ -235,7 +235,6 @@ class PropertyMapper:
             is_published = notion_properties[is_published_key]
             # isPublished=true → draft=false, isPublished=false → draft=true
             result["draft"] = not is_published
-
         else:
             # 기본값: draft = true (초안 상태)
             result["draft"] = True
