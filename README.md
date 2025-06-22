@@ -4,9 +4,16 @@
 
 ## ✅ 주요 특징 업데이트
 
+### 🧠 스마트 동기화 시스템 (NEW!)
+- **자동 모드 선택**: 커밋 메시지나 브랜치명에 따라 `incremental` 또는 `full-sync` 모드 자동 선택
+- **키워드 기반 제어**: `[full-sync]`, `[force-rebuild]` 키워드로 전체 재빌드 트리거
+- **브랜치 기반 제어**: 브랜치명에 `full-sync` 포함 시 자동으로 전체 동기화
+- **스케줄 최적화**: 정기 실행 시 자동으로 full-sync로 전체 정리
+
 ### 🔄 증분 렌더링
 - Notion 페이지의 `last_edited_time`과 content hash를 기반으로 변경된 콘텐츠만 재처리
 - `.notion-hugo-state.json` 파일에 증분 정보를 저장하고, GitHub Actions 캐시를 통해 유지함
+- **문제 해결 도구**: 캐시 문제 발생 시 간단한 키워드로 전체 재빌드 가능
 
 ### 🧼 저장소 구조
 - Markdown, 상태파일 등은 `.gitignore` 처리 → GitHub 저장소는 항상 깨끗하게 유지됨
@@ -15,6 +22,12 @@
 ### 🚀 자동화 배포 (GitHub Actions)
 - 완전한 워크플로우 하나로 통합: Notion → Hugo 빌드 → GitHub Pages 배포
 - 워크플로우 실행 시 `.notion-hugo-state.json`을 캐시에서 복원해 증분 유지
+- **스마트 모드 감지**: 실행 컨텍스트에 따라 최적의 동기화 방식 자동 선택
+
+### 🛠️ 문제 해결 도구
+- **Shortcode 호환성 수정**: Hugo에서 지원하지 않는 shortcode 자동 변환
+- **레거시 파일 정리**: UUID 기반 과거 파일들 자동 백업 및 정리
+- **디버그 정보**: 상세한 로그로 문제 진단 지원
 
 ### 📄 GitHub Actions 워크플로우 예시
 
@@ -112,6 +125,71 @@ jobs:
 ```bash
 python notion_hugo_app.py --dry-run
 ```
+
+## 🧠 스마트 동기화 사용법
+
+### 커밋 메시지로 모드 제어
+
+GitHub Actions에서 자동으로 동기화 모드를 선택합니다:
+
+```bash
+# 전체 재빌드 (캐시 문제 해결)
+git commit -m "Fix cache issues [full-sync]"
+git push origin main
+
+# 강제 재빌드 (대규모 변경 후)
+git commit -m "Major content update [force-rebuild]"
+git push origin main
+
+# 일반 업데이트 (기본 incremental 모드)
+git commit -m "Add new blog post"
+git push origin main
+```
+
+### 브랜치명으로 모드 제어
+
+```bash
+# 브랜치명에 full-sync 포함 시 자동으로 전체 동기화
+git checkout -b hotfix/full-sync-cache-fix
+git push origin hotfix/full-sync-cache-fix
+```
+
+### 수동 실행
+
+GitHub Actions에서 "Run workflow" 버튼 클릭 시 자동으로 full-sync 모드로 실행됩니다.
+
+### 로컬에서 전체 재빌드
+
+```bash
+# 로컬에서 전체 강제 재빌드 실행
+chmod +x scripts/force-full-rebuild.sh
+./scripts/force-full-rebuild.sh
+```
+
+## 🛠️ 문제 해결 도구
+
+### Shortcode 호환성 문제
+
+```bash
+# Hugo에서 지원하지 않는 shortcode 자동 수정
+chmod +x scripts/fix-shortcodes.sh
+./scripts/fix-shortcodes.sh
+```
+
+### 레거시 파일 정리
+
+```bash
+# UUID 기반 과거 파일들 정리
+chmod +x scripts/cleanup-legacy-files.sh
+./scripts/cleanup-legacy-files.sh
+```
+
+### 상세 가이드
+
+- **`docs/smart-sync-usage-guide.md`** - 스마트 동기화 상세 사용법
+- **`docs/troubleshooting-sync-mode.md`** - 동기화 모드 문제 해결
+- **`docs/immediate-action-plan.md`** - 즉시 실행 가이드
+- **`docs/cache-cleanup-guide.md`** - 캐시 정리 종합 가이드
 
 ## 전체 흐름도
 
