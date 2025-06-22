@@ -5,15 +5,20 @@
 ## ✅ 주요 특징 업데이트
 
 ### 🧠 스마트 동기화 시스템 (NEW!)
-- **자동 모드 선택**: 커밋 메시지나 브랜치명에 따라 `incremental` 또는 `full-sync` 모드 자동 선택
-- **키워드 기반 제어**: `[full-sync]`, `[force-rebuild]` 키워드로 전체 재빌드 트리거
-- **브랜치 기반 제어**: 브랜치명에 `full-sync` 포함 시 자동으로 전체 동기화
-- **스케줄 최적화**: 정기 실행 시 자동으로 full-sync로 전체 정리
+- **자동 모드 선택**: 커밋 메시지, 브랜치명, 실행 종류(스케줄, 수동)에 따라 `incremental` 또는 `full-sync` 모드를 자동으로 선택합니다.
+- **키워드 기반 제어**: 커밋 메시지에 `[full-sync]` 또는 `[force-rebuild]` 키워드를 포함하여 전체 재빌드를 수동으로 트리거할 수 있습니다.
+- **브랜치 기반 제어**: 브랜치명에 `full-sync`가 포함된 경우 자동으로 전체 동기화를 실행합니다.
+- **안정성 강화**: GitHub Actions에서 커밋 메시지를 가져오지 못할 경우를 대비한 fallback 로직이 포함되어 있습니다.
+
+### 🔗 URL 리디렉션 및 SEO 최적화 (NEW!)
+- **자동 리디렉션**: 과거 URL 패턴(`_posts/`, `/post/` 등)으로 들어온 요청을 현재 URL 구조(`/posts/`)로 자동 리디렉션하여 404 오류를 방지합니다.
+- **SEO 점수 보존**: 301 영구 리디렉션을 통해 기존 URL의 SEO 점수를 새로운 URL로 이전합니다.
+- **클라이언트/서버 지원**: `_redirects`, `.htaccess` 등 서버 레벨 설정과 404 페이지의 클라이언트 사이드 스크립트를 모두 지원하여 어떤 환경에서도 동작합니다.
 
 ### 🔄 증분 렌더링
-- Notion 페이지의 `last_edited_time`과 content hash를 기반으로 변경된 콘텐츠만 재처리
-- `.notion-hugo-state.json` 파일에 증분 정보를 저장하고, GitHub Actions 캐시를 통해 유지함
-- **문제 해결 도구**: 캐시 문제 발생 시 간단한 키워드로 전체 재빌드 가능
+- Notion 페이지의 `last_edited_time`과 콘텐츠 해시를 기반으로 변경된 페이지만 선별하여 처리합니다.
+- `.notion-hugo-state.json` 파일에 증분 정보를 저장하고, GitHub Actions 캐시를 통해 빌드 간 상태를 유지합니다.
+- **문제 해결 도구**: 캐시 문제 발생 시 간단한 키워드로 전체 재빌드를 실행할 수 있습니다.
 
 ### 🧼 저장소 구조
 - Markdown, 상태파일 등은 `.gitignore` 처리 → GitHub 저장소는 항상 깨끗하게 유지됨
@@ -37,17 +42,21 @@
 name: Notion → Hugo → GitHub Pages
 
 on:
+  push:
+    branches:
+      - main
+      - dev
   schedule:
-    - cron: '0 */1 * * *'
+    - cron: '0 */1 * * *' # 1시간마다 실행
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # 'git' 명령어를 위해 write 권한 필요
   pages: write
   id-token: write
 
 concurrency:
-  group: "deploy"
+  group: "pages"
   cancel-in-progress: false
 
 env:
@@ -56,14 +65,15 @@ env:
   STATE_FILE: .notion-hugo-state.json
 
 jobs:
-  build-and-deploy:
+  # 빌드 Job: Notion에서 마크다운을 생성하고 Hugo로 빌드
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 0
+          fetch-depth: 0 # 'git log'를 위해 전체 히스토리 가져오기
 
       - name: Install Hugo
         run: |
@@ -91,31 +101,55 @@ jobs:
           restore-keys: |
             notion-state-
 
-      - name: Generate Markdown from Notion (incremental)
+      - name: Determine sync mode
+        id: sync-mode
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          if [[ -z "$COMMIT_MSG" ]]; then
+            COMMIT_MSG="$(git log -1 --pretty=%B)"
+          fi
+          REF_NAME="${{ github.ref_name }}"
+          EVENT_NAME="${{ github.event_name }}"
+          
+          if [[ "$COMMIT_MSG" == *"[full-sync]"* ]] || \
+             [[ "$COMMIT_MSG" == *"[force-rebuild]"* ]] || \
+             [[ "$REF_NAME" == *"full-sync"* ]] || \
+             [[ "$EVENT_NAME" == "schedule" ]] || \
+             [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "mode=--full-sync" >> $GITHUB_OUTPUT
+          else
+            echo "mode=--incremental" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Markdown from Notion
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: |
-          python notion_hugo_app.py --incremental --state-file $STATE_FILE
+          python notion_hugo_app.py ${{ steps.sync-mode.outputs.mode }} --state-file $STATE_FILE
 
       - name: Setup GitHub Pages
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Install Node.js dependencies
-        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
-
       - name: Build with Hugo
         env:
-          HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
           HUGO_ENVIRONMENT: production
         run: |
-          hugo --minify --buildDrafts --baseURL "${{ steps.pages.outputs.base_url }}/"
+          hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
+  # 배포 Job: 빌드된 아티팩트를 GitHub Pages에 배포
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

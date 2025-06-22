@@ -388,9 +388,9 @@ def batch_process_pages(
             properties = get_page_properties(page)
             if property_mapper.should_skip_page(properties):
                 result["skipped"].append(
-                    {"pageId": page["id"], "reason": "Do Not Render"}
+                    {"pageId": page["id"], "reason": "skipRendering is set"}
                 )
-                print(f"[Info] 페이지 {page.get('id')} 건너뜀: Do Not Render 설정됨")
+                print(f"[Info] 페이지 {page.get('id')} 건너뜀: skipRendering 설정됨")
                 continue
 
             # 페이지 저장

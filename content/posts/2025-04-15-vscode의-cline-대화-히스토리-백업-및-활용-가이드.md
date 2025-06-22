@@ -3,7 +3,7 @@ author: ''
 date: '2025-04-15'
 description: ''
 draft: false
-lastmod: '2025-06-20T23:14:00.000Z'
+lastmod: '2025-06-22T03:30:00.000Z'
 notion_id: 1d77522e-eb2f-80cd-a0f9-ea67b0ed0f12
 slug: vscode-cline-chat-history-backup-guide
 subtitle: ''

@@ -9,7 +9,7 @@ keywords: &id001
 - AI
 - Web Automation
 - Browser
-lastmod: '2025-04-04T12:26:00.000Z'
+lastmod: '2025-06-22T03:36:00.000Z'
 notion_id: 1be7522e-eb2f-807e-b828-de0a80e9c3a3
 slug: ai-web-automation-browser-use
 subtitle: 'AI 기반 웹 자동화의 부상: Browser Use와 AgenticReplay 비교 분석 및 미래 전망'
@@ -30,7 +30,7 @@ title: 'AI 기반 웹 자동화의 부상: Browser Use와 자동화 브라우징
 
 ![AgenticReplay 아키텍처 개요 - Selenium 기반 웹 자동화 시스템의 구조도. 이벤트 추적 모듈, 데이터 관리 모듈, 이벤트 재현 모듈이 상호 연결된 다이어그램]
 
-![](https://prod-files-secure.s3.us-west-2.amazonaws.com/94f51666-273a-443d-bf89-42827b5b6876/f0220c66-20a2-4c4c-89ad-2a38d7b5bd57/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466QSLXJCPV%2F20250622%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250622T003011Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEPj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIAhAN7uRQ5teLTgdMjOyLIKKQs3murtSB7Wuf7LZGot3AiBMZbeEbKmcAI08THcjvaHZP1LQEu288tTz5K%2B9oi69sCqIBAjh%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIMK%2BrQlcMqYieO6DfEKtwDK6xt585TurS10hNrnMdMjg75aUflGT%2FZTNUrgQf%2BD8h5ErEpRqD8PzIA4dfm2MSZyRZ6M1NiGghI72TdX9d41CCxt1zuJIXnp0gbmmXve6hpBSs6QxAdEjNPU3BxhVYzB%2F6FRaVlq%2BIbAxobZ%2FSAmEcC45ZmBvDfy6C%2F%2FwaIcGcebSIM7sdxOQfrvn%2BxFtXAakFh%2FXYqNeDm68k9Q4EEIu6ePjWsbFO7oAXiyd4yqGABrTDFoTwom7gwvh1UNfeoNXEY8yVIpIaGMYSBkQ35SJgLUg9A3RTdX6Zr86ZgWd%2B4Pu1OiNlIFOj%2Fg5TDAP0X3vLcZQ6d9OVh76J8XJjCoTqHYx4e7Fx3C1hFTE5t2bOkV0sBA%2BR0aHy1DIHnkWTxmSA%2FfW1pIo9I4Pqn2KpCf6hgIdpHee3FlNgkrolRcOdiHhz8Q9Dk%2FDEqIFXzWGwqT2aG9KjGOFb3UCEVF1JHhX%2B9YqrMK1nVIF5U%2FyulkhYTRlTnkv0JTaO5lPVdxW7ETOUf4VVjcQ9ekLr%2FRd%2FU69zUA9MkkMsjsJNt80RFdYmCVBscm5oVQ4y7nVfOg5Ql1AZV%2F2f9BR0QPkYTdu9rG8fe38qfPR6wXnisiTwp7hSoBrGUnjDxR8nDtXYwm4jdwgY6pgEEPmbuYWf57UsXP39jgBa%2FtxOn5q2433An%2FSwdmOFjPohSVvkturP5MC%2F654TwtyQJoh2VpO4UX%2FO2EgX3g%2B2owj%2F1eVQBcUewctaYCKnk%2B0jYBq6qMTzsZefi7g%2BgnfDku1MdZfIWf1%2FE3tpw%2Bj5hWxXd3xHiXDvysPTRbZbF2mpcyus2is6Fg711gbhp2CMIWEogKq6G4MRcJu1TT6WRW%2BMenmzE&X-Amz-Signature=ebb2eab30e44be46de50c44b81ccd52575fad6510bc7dce0398896faa94af74e&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
+![](https://prod-files-secure.s3.us-west-2.amazonaws.com/94f51666-273a-443d-bf89-42827b5b6876/f0220c66-20a2-4c4c-89ad-2a38d7b5bd57/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466U4SWP46A%2F20250622%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250622T034013Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEPj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIFxkHI3e87yLGKKwuIqTh09nlMzjQXN13J88SMFHrLvSAiB%2F40kzpuceOOFouQZoGVp3UXOAVQPqVXB4bxernm3hYCqIBAjh%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIMYLplJ5RtnPESVvpjKtwDmIY6Nd1JMiA61UnzySg4jPExIr7EfXrrwWihiQpRyxwXZCQTH3RCikxUBolZcTLKZnLq05RhFGx1ajeeNWEgI4W4SN3eWKfz9bPPcAn0FSKAFVdDEjaSjqh2uvh8HQOh925Hbc1hxWhXDT32DQRQEvapmJLq1aSvBa0IDdZTfXR7rtQyJcsOhMrVtJwWEzcEJXzYu%2FhZetXolpg2zsDWQ5qOYIGRKUKH9y9Bf8Mpy%2B2qkqWVebTJ71PeluGIss7rkJrKh57al2mQLvo5H3Xr2%2FLs%2F%2BSR551twDiEKWV%2B9%2Bkf4X%2BVHL5XjGYgLUjrtRwuZ%2Fwh1SGiwZPhoX9YsHUaNe9%2F84uRz5ISnBHche83zqP85oSfdy%2FP%2Bo7GCAra1lROjMcF8o099iFv6XwCrjCsRu2JFr9Qf4Iz7lnt32bvIvkY%2BNqS9LMCMbzkWl5tUhs39Q0wJpokiDEbEdLEiSk3YPUpD16oHTGf0rW3ylppteWT8HRlZvuqGQdE7QahtJ19JnYAPuHg9Vuc5uvt5mOUSbVq4I6MJcRSfLrCjOsnsDicgK6uDkktIpVQvaVhH4kzhTOI%2FlBSWm5ki5LLI1zzUK5bulRXdzv%2Bw9lCYLnrTZfY0MNHslg6iJned%2Fow7YfdwgY6pgF2gCUiEn8y7rD4F4sLNzTkuoCkF7EbUeGb2FMeJabTp7nMgSu7ahGnWLSZKiz2U05yLDnTsDzricjoMNU8z%2BOZ8gumpuXXibEO%2BBhcCi6jsFbPEtbrcNfiBpJggqVBXPbLNs9Kf%2BYRhPVDbHXsZZ%2FE7qNU%2F%2BZak4ptANautT%2FstazCh%2BAN1dG0855nFQ8WmvilJgLzBgVUMP1CWVRdenYNA1mRvYUX&X-Amz-Signature=ba374a50e204348c1abeb700d9b7b53f95022ad1bddf72079ba8744ca21a9b1e&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
 
 ### **프로젝트 개념 및 목표**
 
@@ -225,3 +225,4 @@ AgenticReplay와 같은 프로젝트를 구상했던 개발자로서, Browser Us
 앞으로 Realtime API와의 통합, 다양한 응용 분야 개척, 기술적 개선 등을 통해 AI 기반 웹 자동화 기술은 더욱 발전할 것으로 기대됩니다. 이러한 발전은 개발자, 비즈니스 사용자, 일반 사용자 모두에게 새로운 가능성을 열어줄 것입니다.
 
 Browser Use와 같은 혁신적인 도구가 등장함에 따라, 우리는 AI가 웹과 상호작용하는 방식의 근본적인 변화를 목격하고 있습니다. 이는 단순한 기술적 발전을 넘어, 인간과 AI의 협업 방식, 웹 서비스 설계 방식, 그리고 궁극적으로는 인터넷을 활용하는 방식 자체를 변화시킬 잠재력을 가지고 있습니다.
+

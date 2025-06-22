@@ -54,6 +54,19 @@
 - 사용되지 않는 코드와 실제 사용되는 코드를 구분해야 함.
 - 근본 원인을 찾기 위해 전체 파이프라인의 데이터 흐름을 추적해야 함.
 
+## 추가 분석: Incremental 모드와 기존 데이터 처리
+
+- **질문**: `incremental` 처리 모드에서 기존에 **가 있던 포스트가 자동으로 수정되는가?
+- **답변**: **아니요, 수정되지 않습니다.**
+- **이유**:
+  - `incremental` 모드는 노션의 `last_edited_time`을 비교하여 변경된 페이지만 처리합니다.
+  - 기존 포스트의 노션 페이지가 실제로 수정되지 않았다면 `last_edited_time`이 동일하므로 건너뜁니다.
+  - 따라서 우리가 수정한 `src/render.py`의 title 볼드 제거 로직이 적용되지 않습니다.
+- **해결 방법**:
+  - **--full-sync 옵션 사용**: `python -m src.notion_hugo --full-sync`
+  - **메타데이터 파일 삭제**: `rm .notion-hugo-state.json`
+  - **이번 사례에서는 `scripts/fix-title-bold-markdown.py` 스크립트로 이미 일괄 처리 완료**
+
 ## 참고
 
 - 수정된 파일: `src/render.py`
