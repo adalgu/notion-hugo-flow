@@ -7,7 +7,7 @@ lastmod: '2025-04-04T15:53:00.000Z'
 notion_id: 9cee1df3-c7b0-47c6-a163-ce7c9b961f38
 slug: ''
 subtitle: ''
-title: Colab(코랩)에서 KoGPT** 실행**
+title: Colab(코랩)에서 KoGPT 실행
 ---
 
 ## 코랩에 우선 패키지 설치

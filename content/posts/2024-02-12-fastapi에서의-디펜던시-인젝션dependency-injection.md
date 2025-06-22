@@ -18,7 +18,7 @@ summary: FastAPI에서 디펜던시 인젝션은 코드의 재사용성과 유�
   개념과 FastAPI에서의 구현 방법을 실제 예제와 함께 상세히 설명합니다. 인증, 데이터베이스 세션 관리, 권한 검증 등을 더 효율적으로 처리하는
   방법을 배워보세요.
 tags: *id001
-title: '**FastAPI에서의 디펜던시 인젝션**(Dependency Injection)'
+title: FastAPI에서의 디펜던시 인젝션(Dependency Injection)
 ---
 
 ```python

@@ -22,7 +22,7 @@ summary: 이 글은 Streamlit 프레임워크를 활용해 파이썬으로 개�
   클라우드 기능을 강조하며, psycopg2 라이브러리를 사용해 PostgreSQL 데이터베이스에 연결하고 기본 데이터베이스 작업을 수행하는 방법을
   코드 스니펫과 함께 설명한다.
 tags: *id001
-title: '**[ElephantSQL] PostgreSQL과 Python을 연동하는 방법: 기초부터 코드 예제까지**'
+title: '[ElephantSQL] PostgreSQL과 Python을 연동하는 방법: 기초부터 코드 예제까지'
 ---
 
 **PostgreSQL과 Python을 연동하는 방법: 기초부터 실습까지**

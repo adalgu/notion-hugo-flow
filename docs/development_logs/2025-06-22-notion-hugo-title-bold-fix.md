@@ -7,30 +7,55 @@
 
 - 노션에서 제목에 볼드 마크다운(**)이 포함된 경우, 휴고로 변환된 마크다운의 frontmatter title에도 **가 그대로 남아있어, 웹페이지 <h1> 태그에 **가 노출되는 문제가 발생함.
 - 일부 포스트는 title에 **가 있고, 일부는 없음(입력 데이터 불일치).
+- 예시: "**AI 기반 웹 자동화의 부상: Browser Use와 자동화 브라우징의 미래**" → 웹페이지에서 **가 그대로 표시됨
 
-## 원인
+## 원인 분석
 
-- 노션→휴고 변환 파이프라인에서 title 값을 별도의 후처리 없이 frontmatter에 기록함.
-- 노션에서 볼드로 입력된 제목이 그대로 마크다운 파일에 반영됨.
+### 초기 분석 (잘못된 접근)
+- 처음에는 `src/markdown_converter.py`의 `create_hugo_frontmatter` 함수에서 title 처리가 일어난다고 생각했음.
+- 해당 함수에 볼드 마크다운 제거 코드를 추가했으나 효과가 없었음.
 
-## 개선 내용
+### 실제 원인 발견
+- 실제로는 `src/render.py`의 `get_page_properties` 함수에서 title 추출이 일어남.
+- `extract_rich_text` 함수가 노션의 rich_text에서 볼드 서식을 마크다운(**) 으로 변환하면서 문제 발생.
+- `markdown_converter.py`의 함수는 실제로 사용되지 않는 코드였음.
 
-- `src/markdown_converter.py`의 `create_hugo_frontmatter` 함수에서 title 내 **를 자동으로 제거하도록 코드 수정.
+## 해결 방법
+
+### 1. 근본 원인 해결
+- `src/render.py`의 `get_page_properties` 함수에서 title 추출 시 볼드 마크다운 제거 로직 추가:
   ```python
-  title = properties.get("title", "Untitled")
-  # Remove markdown bold from title (for Notion->Hugo)
-  title = title.replace("**", "")
-  frontmatter.append(f'title: "{title}"')
+  if prop_type == "title":
+      title_text = extract_rich_text(prop.get("title", []))
+      # Remove markdown/HTML bold from title (for Notion->Hugo)
+      import re
+      title_text = re.sub(
+          r"(\*\*|__|<b>|</b>|<strong>|</strong>)", "", title_text
+      )
+      properties["title"] = title_text
   ```
-- 이 변경으로 노션에서 볼드 마크다운이 포함된 제목도 휴고 변환 시 일관적으로 **가 제거됨.
+
+### 2. 기존 파일 일괄 처리
+- `scripts/fix-title-bold-markdown.py` 스크립트 작성하여 기존 마크다운 파일들의 title에서 볼드 마크다운 제거.
+- 25개 파일 검사 결과 3개 파일에서 볼드 마크다운 발견 및 제거:
+  - `2024-02-12-fastapi에서의-디펜던시-인젝션dependency-injection.md`
+  - `2024-02-22-elephantsql-postgresql과-python을-연동하는-방법-기초부터-코드-예제까지.md`
+  - `2022-11-05-colab코랩에서-kogpt-실행.md`
 
 ## 기대 효과
 
 - 휴고 렌더링 시 <h1> 태그에 **가 노출되는 문제 근본 해결.
-- 기존 마크다운 파일도 변환 파이프라인 재실행 시 자동으로 일관성 있게 처리됨.
 - 향후 노션→휴고 변환 과정에서 title 볼드 표기 문제 재발 방지.
+- 기존 마크다운 파일들의 일관성 확보.
+
+## 교훈
+
+- 문제 해결 시 실제 코드 실행 경로를 정확히 파악하는 것이 중요함.
+- 사용되지 않는 코드와 실제 사용되는 코드를 구분해야 함.
+- 근본 원인을 찾기 위해 전체 파이프라인의 데이터 흐름을 추적해야 함.
 
 ## 참고
 
-- 관련 파일: `src/markdown_converter.py`
+- 수정된 파일: `src/render.py`
+- 일괄 처리 스크립트: `scripts/fix-title-bold-markdown.py`
 - 적용일: 2025-06-22

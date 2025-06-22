@@ -212,6 +212,12 @@ def get_page_properties(page: Dict[str, Any]) -> Dict[str, Any]:
 
         if prop_type == "title":
             title_text = extract_rich_text(prop.get("title", []))
+            # Remove markdown/HTML bold from title (for Notion->Hugo)
+            import re
+
+            title_text = re.sub(
+                r"(\*\*|__|<b>|</b>|<strong>|</strong>)", "", title_text
+            )
             properties["title"] = title_text
 
         elif prop_type == "rich_text":
