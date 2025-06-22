@@ -171,8 +171,10 @@ def create_hugo_frontmatter(properties: Dict[str, Any]) -> str:
 
     # 제목
     title = properties.get("title", "Untitled")
-    # Remove markdown bold from title (for Notion->Hugo)
-    title = title.replace("**", "")
+    # Remove markdown/HTML bold from title (for Notion->Hugo)
+    import re
+
+    title = re.sub(r"(\*\*|__|<b>|</b>|<strong>|</strong>)", "", title)
     frontmatter.append(f'title: "{title}"')
 
     # 날짜
