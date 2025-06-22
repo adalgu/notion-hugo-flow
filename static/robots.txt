@@ -1,3 +1,10 @@
 User-agent: *
-Allow:/
+Allow: /
+
+# Sitemap location
 Sitemap: https://gunn.kim/sitemap.xml
+
+# Disallow old URL patterns to prevent indexing
+Disallow: /post/
+Disallow: /posts/2025-03-17-*
+Disallow: /posts/202*-*-*-*
