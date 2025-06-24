@@ -7,9 +7,20 @@ on:
 
   schedule:
     - cron: '0 */1 * * *'  # 매시간 실행
+  
   workflow_dispatch:
-  repository_dispatch:  # ← 이거 추가
-    types: [trigger-hugo-build]  # 이벤트명은 자유롭게 정해도 됨
+    inputs:
+      sync_mode:
+        description: 'Sync mode (incremental or full-sync)'
+        required: false
+        default: 'incremental'
+        type: choice
+        options:
+        - incremental
+        - full-sync
+  
+  repository_dispatch:
+    types: [trigger-hugo-build]
 
 permissions:
   contents: read
@@ -64,34 +75,54 @@ jobs:
       - name: Determine sync mode
         id: sync-mode
         run: |
-          # 커밋 메시지나 태그에 따라 sync 모드 결정
-          # 여러 방법으로 커밋 메시지 가져오기 시도
+          # 동기화 모드 결정 로직 개선
           COMMIT_MSG="${{ github.event.head_commit.message }}"
           if [[ -z "$COMMIT_MSG" ]]; then
             COMMIT_MSG="$(git log -1 --pretty=%B)"
           fi
           REF_NAME="${{ github.ref_name }}"
           EVENT_NAME="${{ github.event_name }}"
+          MANUAL_INPUT="${{ github.event.inputs.sync_mode }}"
           
           echo "Debug info:"
           echo "- Commit message: '$COMMIT_MSG'"
           echo "- Ref name: '$REF_NAME'"
           echo "- Event name: '$EVENT_NAME'"
+          echo "- Manual input: '$MANUAL_INPUT'"
           
-          # full-sync 조건들
-          if [[ "$COMMIT_MSG" == *"[full-sync]"* ]] || \
-             [[ "$COMMIT_MSG" == *"[force-rebuild]"* ]] || \
-             [[ "$REF_NAME" == *"full-sync"* ]] || \
-             [[ "$EVENT_NAME" == "schedule" ]] || \
-             [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            echo "mode=full-sync" >> $GITHUB_OUTPUT
+          # 우선순위별 모드 결정
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && -n "$MANUAL_INPUT" ]]; then
+            # 1순위: 수동 실행 시 사용자가 직접 선택한 모드
+            SYNC_MODE="$MANUAL_INPUT"
+            echo "📝 User selected mode: $SYNC_MODE"
+          elif [[ "$COMMIT_MSG" == *"[full-sync]"* ]] || \
+               [[ "$COMMIT_MSG" == *"[force-rebuild]"* ]]; then
+            # 2순위: 커밋 메시지의 키워드
+            SYNC_MODE="full-sync"
+            echo "🏷️ Keyword-triggered full sync"
+          elif [[ "$REF_NAME" == *"full-sync"* ]]; then
+            # 3순위: 브랜치명에 full-sync 포함
+            SYNC_MODE="full-sync"
+            echo "🌿 Branch-triggered full sync"
+          elif [[ "$EVENT_NAME" == "schedule" ]]; then
+            # 4순위: 스케줄 실행은 full-sync (정기 동기화)
+            SYNC_MODE="full-sync"
+            echo "⏰ Scheduled full sync"
+          else
+            # 기본: incremental 모드
+            SYNC_MODE="incremental"
+            echo "⚡ Default incremental sync"
+          fi
+          
+          echo "mode=$SYNC_MODE" >> $GITHUB_OUTPUT
+          
+          if [[ "$SYNC_MODE" == "full-sync" ]]; then
             echo "🔄 Full sync mode activated"
           else
-            echo "mode=incremental" >> $GITHUB_OUTPUT
             echo "⚡ Incremental sync mode activated"
           fi
           
-          echo "Final sync mode: $(grep 'mode=' $GITHUB_OUTPUT | cut -d'=' -f2)"
+          echo "Final sync mode: $SYNC_MODE"
 
       - name: Generate Markdown from Notion
         env:

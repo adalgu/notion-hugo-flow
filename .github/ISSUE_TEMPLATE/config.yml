@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 General Discussion
+    url: https://github.com/adalgu/adalgu.github.io/discussions
+    about: Ask questions, share ideas, or discuss the project with the community
+  - name: 🧪 Beta Testing Guide
+    url: https://github.com/adalgu/adalgu.github.io/blob/main/docs/beta-testing-guide.md
+    about: Comprehensive guide for beta testers - read this first!
+  - name: 📖 Documentation
+    url: https://github.com/adalgu/adalgu.github.io#readme
+    about: Read the full documentation and guides
+  - name: 🔧 Troubleshooting
+    url: https://github.com/adalgu/adalgu.github.io/blob/main/docs/troubleshooting-guide.md
+    about: Common issues and solutions
