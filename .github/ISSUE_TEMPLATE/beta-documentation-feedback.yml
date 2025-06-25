@@ -1,0 +1,134 @@
+name: 📚 Documentation Feedback
+description: Report issues or suggest improvements for documentation
+title: "[BETA DOCS] "
+labels: ["beta", "documentation", "user-experience"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Great documentation is key to v1.0.0 success! 📖
+        
+        Help us make the guides clear and comprehensive.
+
+  - type: input
+    id: beta-version
+    attributes:
+      label: Beta Version
+      value: "v0.9.0-beta"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: doc-section
+    attributes:
+      label: Documentation Section
+      description: Which part of the documentation needs attention?
+      options:
+        - README.md (Main project description)
+        - Installation Guide
+        - Quick Start Guide
+        - Configuration Reference
+        - Advanced Usage
+        - Troubleshooting Guide
+        - API Documentation
+        - Contributing Guidelines
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feedback-type
+    attributes:
+      label: Feedback Type
+      description: What kind of feedback is this?
+      options:
+        - Missing Information
+        - Incorrect Information
+        - Unclear Instructions
+        - Outdated Content
+        - Suggestion for Improvement
+        - New Section Needed
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Issue Description
+      description: Describe the documentation issue or improvement needed
+      placeholder: |
+        Be specific about:
+        - What information is missing or wrong
+        - Where you got confused
+        - What steps didn't work as described
+        - What you were trying to accomplish
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-content
+    attributes:
+      label: Current Content (if applicable)
+      description: Quote the current documentation that needs improvement
+      placeholder: "Copy the relevant section from the current docs..."
+
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Suggested Improvement
+      description: How should this be improved or what should be added?
+      placeholder: |
+        Your suggestions:
+        - Clearer wording
+        - Additional examples
+        - Missing steps
+        - Better organization
+        - Visual aids needed
+
+  - type: dropdown
+    id: user-level
+    attributes:
+      label: User Experience Level
+      description: What's your experience level with similar tools?
+      options:
+        - Beginner (New to Hugo/Notion integrations)
+        - Intermediate (Some experience with static sites)
+        - Advanced (Experienced with automation tools)
+        - Expert (Experienced developer/blogger)
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Usage Context
+      description: What were you trying to do when you encountered this issue?
+      placeholder: |
+        Provide context:
+        - Your goal/task
+        - Your background
+        - How you found this documentation
+        - What you expected to find
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority for v1.0.0
+      description: How important is fixing this for the v1.0.0 release?
+      options:
+        - Critical (Blocks basic usage)
+        - High (Causes significant confusion)
+        - Medium (Would improve user experience)
+        - Low (Minor improvement)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Beta Testing Agreement
+      options:
+        - label: I'm participating in v0.9.0 beta testing
+          required: true
+        - label: I'm providing feedback to improve documentation quality
+          required: true

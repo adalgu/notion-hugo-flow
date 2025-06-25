@@ -1,0 +1,130 @@
+name: 🐛 Beta Bug Report
+description: Report a bug found during beta testing
+title: "[BETA BUG] "
+labels: ["beta", "bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us test v0.9.0 Beta! 🧪
+        
+        Please fill out this form to help us understand and fix the issue.
+
+  - type: input
+    id: beta-version
+    attributes:
+      label: Beta Version
+      description: Which beta version are you using?
+      value: "v0.9.0-beta"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: What environment are you running on?
+      options:
+        - macOS
+        - Linux (Ubuntu)
+        - Linux (Other)
+        - Windows
+        - Windows (WSL)
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      description: What version of Python are you using?
+      placeholder: "e.g., 3.9.7"
+    validations:
+      required: true
+
+  - type: input
+    id: hugo-version
+    attributes:
+      label: Hugo Version
+      description: What version of Hugo are you using?
+      placeholder: "e.g., 0.111.3"
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug
+      placeholder: "Describe what happened..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Execute '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: "Describe what should have happened..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: "Describe what actually happened..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs / Screenshots
+      description: Please attach any relevant logs, error messages, or screenshots
+      placeholder: "Paste error logs here or drag & drop screenshots"
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: "Add any other context about the problem here..."
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical (Blocks core functionality)
+        - High (Major feature broken)
+        - Medium (Minor feature issue)
+        - Low (Cosmetic or edge case)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Beta Testing Agreement
+      description: By submitting this issue, you agree to help with beta testing
+      options:
+        - label: I'm participating in v0.9.0 beta testing
+          required: true
+        - label: I've checked existing issues to avoid duplicates
+          required: true

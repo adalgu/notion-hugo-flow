@@ -1,0 +1,128 @@
+name: 📊 Beta Performance Report
+description: Share performance testing results and optimization suggestions
+title: "[BETA PERF] "
+labels: ["beta", "performance", "optimization"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Performance feedback is crucial for v1.0.0! ⚡
+        
+        Help us understand how the pipeline performs in different environments.
+
+  - type: input
+    id: beta-version
+    attributes:
+      label: Beta Version
+      value: "v0.9.0-beta"
+    validations:
+      required: true
+
+  - type: textarea
+    id: test-environment
+    attributes:
+      label: Test Environment
+      description: Describe your testing environment
+      placeholder: |
+        - OS: macOS 14.0
+        - CPU: M2 Pro, 10 cores
+        - RAM: 16GB
+        - Python: 3.9.7
+        - Hugo: 0.111.3
+    validations:
+      required: true
+
+  - type: textarea
+    id: blog-scale
+    attributes:
+      label: Blog Scale
+      description: Size and complexity of your test blog
+      placeholder: |
+        - Number of posts: 150
+        - Total content size: ~50MB
+        - Average post length: 2000 words
+        - Images per post: 3-5
+        - Special content: code blocks, tables, embeds
+    validations:
+      required: true
+
+  - type: textarea
+    id: performance-metrics
+    attributes:
+      label: Performance Measurements
+      description: Share your performance test results
+      placeholder: |
+        Full Sync:
+        - Total time: 5 minutes 30 seconds
+        - Memory usage: 250MB peak
+        - API calls: 200 requests
+        - Success rate: 98% (3 failed posts)
+        
+        Incremental Sync:
+        - Time for 5 changed posts: 15 seconds
+        - Memory usage: 80MB peak
+        - API calls: 10 requests
+        - Success rate: 100%
+    validations:
+      required: true
+
+  - type: textarea
+    id: bottlenecks
+    attributes:
+      label: Performance Bottlenecks
+      description: Where did you notice the most delays?
+      placeholder: |
+        Identify the slowest parts:
+        - Notion API rate limiting
+        - Image processing
+        - Markdown conversion
+        - File I/O operations
+        - Hugo build process
+
+  - type: dropdown
+    id: overall-performance
+    attributes:
+      label: Overall Performance Rating
+      description: How would you rate the overall performance?
+      options:
+        - Excellent (Faster than expected)
+        - Good (Meets expectations)
+        - Acceptable (Usable but could be better)
+        - Poor (Too slow for practical use)
+        - Unacceptable (Unusably slow)
+    validations:
+      required: true
+
+  - type: textarea
+    id: optimization-suggestions
+    attributes:
+      label: Optimization Suggestions
+      description: Ideas for improving performance
+      placeholder: |
+        Suggestions for improvement:
+        - Parallel processing for multiple posts
+        - Better caching strategies
+        - Reduced API calls
+        - Memory usage optimization
+        - Specific bottleneck solutions
+
+  - type: textarea
+    id: comparison
+    attributes:
+      label: Comparison with Alternatives (Optional)
+      description: How does it compare to other tools you've used?
+      placeholder: |
+        Compared to other solutions:
+        - Manual Hugo workflow
+        - Other Notion integrations
+        - Different static site generators
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Testing Agreement
+      options:
+        - label: I'm participating in v0.9.0 beta testing
+          required: true
+        - label: These measurements were taken in a realistic usage scenario
+          required: true
