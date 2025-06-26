@@ -1215,17 +1215,22 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
 
 def main():
     """메인 함수"""
+    load_dotenv()
     parser = argparse.ArgumentParser(
         description="Notion-Hugo 원스톱 설치 시스템",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 예시:
-  python setup_one_stop.py --token secret_abc123
-  python setup_one_stop.py --interactive
+  python setup.py --token secret_abc123
+  python setup.py --interactive
+  # 또는 환경변수 사용:
+  # NOTION_TOKEN=secret_... python setup.py
         """,
     )
 
-    parser.add_argument("--token", help="노션 API 토큰")
+    parser.add_argument(
+        "--token", help="노션 API 토큰 (환경변수 NOTION_TOKEN으로 대체 가능)"
+    )
     parser.add_argument(
         "--interactive", "-i", action="store_true", help="대화형 설정 모드"
     )
@@ -1236,20 +1241,22 @@ def main():
     if args.interactive:
         return interactive_setup()
 
-    # 명령줄 모드
-    if not args.token:
-        print("❌ --token 또는 --interactive 옵션이 필요합니다.")
+    # 명령줄 또는 환경변수에서 토큰 가져오기
+    token = args.token or os.environ.get("NOTION_TOKEN")
+
+    if not token:
+        print("❌ --token 인자 또는 NOTION_TOKEN 환경변수가 필요합니다.")
         parser.print_help()
         return False
 
     # 토큰 기본 검증
-    if not args.token.startswith("ntn_"):
+    if not token.startswith("ntn_"):
         print("❌ 노션 토큰은 'ntn_'로 시작해야 합니다.")
-        print("💡 토큰 받는 방법: https://notion.so/my-integrations")
+        print("💡 토큰 받는 방법: https://www.notion.so/my-integrations")
         return False
 
     # 설치 실행
-    installer = OneStopInstaller(args.token, interactive=False)
+    installer = OneStopInstaller(token, interactive=False)
     installer.print_banner()
     return installer.run_installation()
 
