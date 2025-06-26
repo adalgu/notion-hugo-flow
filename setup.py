@@ -695,8 +695,8 @@ mount:
   databases:
   # 환경변수 NOTION_DATABASE_ID_POSTS에서 database_id를 자동 로드
   - target_folder: posts
-    # 아래 database_id는 환경변수가 없을 때만 사용 (보안상 권장하지 않음)
-    # database_id: {self.database_id}  # 환경변수 사용으로 주석 처리됨
+    # 원스톱 설치 시 생성된 데이터베이스 ID가 자동으로 설정됩니다.
+    database_id: {self.database_id}
   
   manual: true
 
