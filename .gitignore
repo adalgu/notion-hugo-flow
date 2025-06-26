@@ -49,7 +49,10 @@ Thumbs.db
 # Project specific
 .notion-hugo-state.json
 .notion-hugo-state.json.bak
+data/error_temp.md
 data/error_temp/
 .vercel
 /docs/logs_40495168461/
 /content/posts/
+# Development logs (internal only)
+docs/development_logs/
