@@ -6,7 +6,7 @@ mount:
   # 환경변수 NOTION_DATABASE_ID_POSTS 또는 아래 database_id 사용
   - target_folder: posts
     # database_id는 환경변수가 없을 때만 사용됩니다 (보안상 권장하지 않음)
-    # database_id: 1b47522e-eb2f-8058-8cdb-df406d2b7990
+    database_id: 1b47522e-eb2f-8058-8cdb-df406d2b7990
   
   # 추가 데이터베이스 예시
   # - target_folder: docs

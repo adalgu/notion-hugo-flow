@@ -127,6 +127,7 @@ jobs:
       - name: Generate Markdown from Notion
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID_POSTS: ${{ secrets.NOTION_DATABASE_ID_POSTS }}
         run: |
           SYNC_MODE="${{ steps.sync-mode.outputs.mode }}"
           echo "Running with sync mode: $SYNC_MODE"
