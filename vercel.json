@@ -6,7 +6,31 @@
       "HUGO_EXTENDED": "true"
     }
   },
-  "buildCommand": "python3 -m pip install -r requirements.txt && python3 setup.py && python3 notion_hugo_app.py && hugo --gc --minify",
+  "buildCommand": "python3 -m pip install -r requirements.txt && python3 vercel_setup_enhanced.py && python3 notion_hugo_app.py && hugo --gc --minify",
   "outputDirectory": "public",
-  "framework": "hugo"
+  "framework": "hugo",
+  "functions": {
+    "pages/api/**/*.py": {
+      "runtime": "python3.9"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options", 
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 }
