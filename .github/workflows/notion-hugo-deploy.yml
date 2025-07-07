@@ -124,6 +124,19 @@ jobs:
           
           echo "Final sync mode: $SYNC_MODE"
 
+      - name: Debug Secrets
+        run: |
+          if [ -n "${{ secrets.NOTION_TOKEN }}" ]; then
+            echo "✅ NOTION_TOKEN secret is loaded."
+          else
+            echo "❌ NOTION_TOKEN secret is NOT loaded or is empty."
+          fi
+          if [ -n "${{ secrets.NOTION_DATABASE_ID_POSTS }}" ]; then
+            echo "✅ NOTION_DATABASE_ID_POSTS secret is loaded."
+          else
+            echo "❌ NOTION_DATABASE_ID_POSTS secret is NOT loaded or is empty."
+          fi
+
       - name: Generate Markdown from Notion
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
