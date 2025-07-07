@@ -9,6 +9,8 @@ from .types import BatchProcessResult, BatchProcessError, BatchProcessSkipped
 from .helpers import iterate_paginated_api
 from .property_mapper import PropertyMapper
 from .utils.file_utils import ensure_directory, get_filename_with_extension
+from .config_enhanced import Config, DatabaseMount, PageMount
+from typing import Union
 
 
 def convert_notion_to_markdown(blocks: List[Dict[str, Any]], notion: Client) -> str:
@@ -271,7 +273,10 @@ def get_page_properties(page: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def save_page(
-    page: Dict[str, Any], notion: Client, target_folder: str
+    page: Dict[str, Any],
+    notion: Client,
+    target_folder: str,
+    config: Config,
 ) -> Optional[str]:
     """
     Notion 페이지를 마크다운 파일로 저장합니다.
@@ -280,6 +285,7 @@ def save_page(
         page: Notion 페이지 객체
         notion: Notion API 클라이언트
         target_folder: 대상 폴더 이름
+        config: 애플리케이션 설정 객체
 
     Returns:
         저장된 콘텐츠 또는 None (오류 발생 시)
@@ -302,11 +308,6 @@ def save_page(
 
         # 페이지 ID
         page_id = page.get("id", "unknown")
-
-        # 설정 로드
-        from .config import load_config
-
-        config = load_config()
 
         # 프론트매터 생성 (여기서 두 번째 skipRendering 체크가 일어남)
         frontmatter = property_mapper.create_hugo_frontmatter(properties, page)
@@ -352,7 +353,10 @@ def save_page(
 
 
 def batch_process_pages(
-    pages: List[Dict[str, Any]], notion: Client, mount: Dict[str, Any]
+    pages: List[Dict[str, Any]],
+    notion: Client,
+    mount: Union[DatabaseMount, PageMount],
+    config: Config,
 ) -> BatchProcessResult:
     """
     여러 Notion 페이지를 일괄 처리합니다.
@@ -394,16 +398,11 @@ def batch_process_pages(
                 continue
 
             # 페이지 저장
-            content = save_page(page, notion, target_folder)
+            content = save_page(page, notion, target_folder, config)
 
             if content:
                 # 제목 가져오기
                 title = properties.get("title", "Untitled")
-
-                # 설정 로드
-                from .config import load_config
-
-                config = load_config()
 
                 # 파일명 생성 (설정에 따라 UUID 또는 다른 형식)
                 filename = get_filename_with_extension(
