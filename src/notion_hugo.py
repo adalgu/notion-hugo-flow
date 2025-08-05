@@ -25,7 +25,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from notion_client import Client
 
-from .config_enhanced import (
+from .config import (
     Config,
     load_config,
     create_config_file,
@@ -211,7 +211,8 @@ def run_notion_pipeline(
 
     except Exception as e:
         print(f"[Error] {str(e)}")
-        return {"success": False, "error": str(e)}
+        # Critical: Exit with error code when API fails
+        sys.exit(1)
 
 
 def process_databases_incremental(
@@ -644,6 +645,51 @@ def cleanup_orphaned_files(page_ids: List[str]) -> None:
         print(f"[Info] {removed_count}개의 고아 파일을 제거했습니다")
     else:
         print("[Info] 고아 파일이 없습니다")
+
+
+def validate_hugo_build() -> bool:
+    """
+    Hugo 빌드 결과를 검증합니다.
+    
+    Returns:
+        빌드가 유효한지 여부
+    """
+    public_dir = "public"
+    
+    # public 디렉토리 존재 확인
+    if not os.path.exists(public_dir):
+        print(f"[Error] {public_dir} 디렉토리가 존재하지 않습니다")
+        return False
+    
+    # public 디렉토리가 비어있는지 확인
+    if not os.listdir(public_dir):
+        print(f"[Error] {public_dir} 디렉토리가 비어있습니다")
+        return False
+    
+    # index.html 파일 존재 확인
+    index_file = os.path.join(public_dir, "index.html")
+    if not os.path.exists(index_file):
+        print(f"[Error] {index_file} 파일이 없습니다")
+        return False
+    
+    # index.html 파일 크기 확인 (너무 작으면 빈 페이지)
+    try:
+        file_size = os.path.getsize(index_file)
+        if file_size < 100:  # 100바이트 미만이면 빈 페이지로 간주
+            print(f"[Error] {index_file} 파일이 너무 작습니다 ({file_size} bytes)")
+            return False
+    except OSError as e:
+        print(f"[Error] {index_file} 파일 크기 확인 실패: {e}")
+        return False
+    
+    # 기본 콘텐츠 폴더 확인
+    posts_dir = os.path.join(public_dir, "posts")
+    if os.path.exists(posts_dir):
+        post_files = [f for f in os.listdir(posts_dir) if f.endswith('.html')]
+        print(f"[Info] {len(post_files)}개의 포스트 페이지가 생성되었습니다")
+    
+    print("[Info] Hugo 빌드 검증 통과")
+    return True
 
 
 def print_results(results: List[BatchProcessResult]) -> None:
@@ -1123,6 +1169,11 @@ def main():
                 dry_run=args.dry_run,
             )
             print(f"Notion 처리 완료: {notion_result['success']}")
+            
+            # Critical: Check if Notion pipeline failed
+            if not notion_result.get('success', False):
+                print("[Error] Notion 파이프라인 실패 - 배포 중단")
+                sys.exit(1)
 
             # 테스트 모드일 경우 Hugo 빌드 건너뛰기
             if args.dry_run:
@@ -1142,8 +1193,15 @@ def main():
             if hugo_result["build_success"] is not None:
                 if hugo_result["build_success"]:
                     print("Hugo 빌드 완료")
+                    
+                    # Critical: Validate build output
+                    if not validate_hugo_build():
+                        print("[Error] Hugo 빌드 검증 실패 - 빈 콘텐츠 감지")
+                        sys.exit(1)
+                        
                 else:
                     print("Hugo 빌드 중 오류 발생")
+                    sys.exit(1)
 
         print("=== 모든 작업이 완료되었습니다 ===")
 

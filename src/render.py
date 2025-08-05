@@ -9,7 +9,7 @@ from .types import BatchProcessResult, BatchProcessError, BatchProcessSkipped
 from .helpers import iterate_paginated_api
 from .property_mapper import PropertyMapper
 from .utils.file_utils import ensure_directory, get_filename_with_extension
-from .config_enhanced import Config, DatabaseMount, PageMount
+from .config import Config, DatabaseMount, PageMount
 from typing import Union
 
 

@@ -145,6 +145,8 @@ jobs:
           SYNC_MODE="${{ steps.sync-mode.outputs.mode }}"
           echo "Running with sync mode: $SYNC_MODE"
           
+          # Run Notion sync and capture exit code
+          set -e  # Exit on error
           if [[ "$SYNC_MODE" == "full-sync" ]]; then
             echo "🔄 Executing full synchronization..."
             python notion_hugo_app.py --full-sync --state-file $STATE_FILE
@@ -152,6 +154,14 @@ jobs:
             echo "⚡ Executing incremental synchronization..."
             python notion_hugo_app.py --incremental --state-file $STATE_FILE
           fi
+          
+          # Verify content was generated
+          if [ ! -d "content/posts" ] || [ -z "$(find content/posts -name '*.md' -type f)" ]; then
+            echo "❌ No content files generated - API sync may have failed"
+            exit 1
+          fi
+          
+          echo "✅ Content generation successful"
 
       - name: Setup GitHub Pages
         id: pages
@@ -166,6 +176,26 @@ jobs:
           HUGO_ENVIRONMENT: production
         run: |
           hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+          
+          # Validate Hugo build output
+          if [ ! -d "public" ] || [ -z "$(ls -A public)" ]; then
+            echo "❌ Hugo build failed - public directory is empty"
+            exit 1
+          fi
+          
+          if [ ! -f "public/index.html" ]; then
+            echo "❌ Hugo build failed - no index.html generated"
+            exit 1
+          fi
+          
+          # Check if index.html has reasonable content
+          INDEX_SIZE=$(wc -c < "public/index.html")
+          if [ "$INDEX_SIZE" -lt 100 ]; then
+            echo "❌ Hugo build failed - index.html too small ($INDEX_SIZE bytes)"
+            exit 1
+          fi
+          
+          echo "✅ Hugo build validation successful"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

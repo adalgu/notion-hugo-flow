@@ -10,7 +10,7 @@ import unicodedata
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-from ..config_enhanced import FilenameConfig
+from ..config import FilenameConfig
 
 
 def ensure_directory(path: str) -> None:

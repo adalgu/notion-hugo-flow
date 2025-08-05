@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  notion-hugo-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    environment:
+      - NOTION_TOKEN=${NOTION_TOKEN}
+      - NOTION_DATABASE_ID_POSTS=${NOTION_DATABASE_ID_POSTS}
+      - HUGO_ENVIRONMENT=production
+    volumes:
+      - ./public:/app/public
+      - ./.notion-hugo-state.json:/app/.notion-hugo-state.json
+    command: ["--full-sync", "--no-build"]
+    
+  hugo-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "1313:1313"
+    volumes:
+      - .:/app
+    environment:
+      - HUGO_ENVIRONMENT=development
+    depends_on:
+      - notion-hugo-prod
+      
+  nginx-production:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "8080:80"
+    depends_on:
+      - notion-hugo-prod

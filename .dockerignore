@@ -1,0 +1,68 @@
+# Documentation and development files
+docs/
+memory-bank/
+dev_handoffs/
+README.md
+setup.py
+CLAUDE.md
+*.md
+
+# Cache and temporary files
+.channels_cache.json
+.users_cache.json
+.notion-hugo-state.json*
+data/error_temp/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# IDE and development tools
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Git and version control
+.git/
+.gitignore
+
+# Environment files (use build args instead)
+.env*
+
+# Hugo build artifacts (rebuilt in container)
+public/
+resources/
+.hugo_build.lock
+
+# Vercel files
+.vercel/
+
+# Testing and development artifacts
+tests/
+test_*
+*_test.*
+
+# Log files
+*.log
+logs/
+
+# Node modules (if any)
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# Python artifacts
+*.egg-info/
+dist/
+build/

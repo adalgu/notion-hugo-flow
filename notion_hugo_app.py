@@ -24,7 +24,6 @@ Options:
     --quiet              Minimal output (errors only)
 """
 
-import sys
 from src.notion_hugo import main
 
 if __name__ == "__main__":

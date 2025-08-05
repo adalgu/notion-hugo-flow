@@ -36,6 +36,7 @@ ENV/
 *.swp
 *.swo
 /memory-bank/
+.claude/
 
 # OS specific
 .DS_Store
@@ -57,3 +58,16 @@ data/error_temp/
 # Development logs (internal only)
 docs/development_logs/
 dev_handoffs/
+
+# Production deployment exclusions
+.channels_cache.json
+.users_cache.json
+*.log
+logs/
+
+# CI/CD sensitive files
+.env.*
+!.env.example
+
+# Docker production artifacts
+docker-compose.override.yml
