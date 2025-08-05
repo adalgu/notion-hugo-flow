@@ -7,9 +7,10 @@ Hugo 블로그 포스트를 위한 데이터베이스를 생성하고 샘플 페
 
 import os
 import yaml
+import time
 from typing import Dict, Any, Optional, List, TypedDict
 from notion_client import Client
-from notion_client.errors import APIResponseError
+from notion_client.errors import APIResponseError, HTTPResponseError
 
 class NotionSetupConfig(TypedDict):
     """설정 구성을 위한 타입 정의"""
@@ -46,6 +47,195 @@ class NotionSetup:
         
         # Notion 클라이언트 생성
         self.notion = Client(auth=self.notion_token)
+        
+        # 재시도 설정
+        self.max_retries = 3
+        self.retry_delay = 1.0  # 초
+    
+    def _retry_api_call(self, func, *args, **kwargs) -> Any:
+        """
+        API 호출을 재시도합니다.
+        
+        Args:
+            func: 호출할 함수
+            *args: 함수 인자
+            **kwargs: 함수 키워드 인자
+            
+        Returns:
+            API 호출 결과
+            
+        Raises:
+            마지막 예외
+        """
+        last_exception = None
+        
+        for attempt in range(self.max_retries):
+            try:
+                return func(*args, **kwargs)
+            except (APIResponseError, HTTPResponseError) as e:
+                last_exception = e
+                
+                # 429 (Rate Limit) 또는 일시적 서버 오류의 경우 재시도
+                if hasattr(e, 'status') and e.status in [429, 500, 502, 503, 504]:
+                    if attempt < self.max_retries - 1:
+                        delay = self.retry_delay * (2 ** attempt)  # Exponential backoff
+                        print(f"API 호출 실패 (재시도 {attempt + 1}/{self.max_retries}), {delay:.1f}초 후 재시도...")
+                        time.sleep(delay)
+                        continue
+                
+                # 권한 오류나 다른 클라이언트 오류는 즉시 실패
+                raise
+            except Exception as e:
+                # 네트워크 오류 등은 재시도
+                last_exception = e
+                if attempt < self.max_retries - 1:
+                    delay = self.retry_delay * (2 ** attempt)
+                    print(f"네트워크 오류 (재시도 {attempt + 1}/{self.max_retries}), {delay:.1f}초 후 재시도...")
+                    time.sleep(delay)
+                    continue
+                raise
+        
+        # 모든 재시도 실패
+        raise last_exception
+    
+    def _validate_token_permissions(self) -> Dict[str, Any]:
+        """
+        토큰의 권한을 검증하고 가능한 작업을 확인합니다.
+        
+        Returns:
+            권한 정보 딕셔너리
+        """
+        permissions = {
+            "can_create_pages": False,
+            "can_create_databases": False,
+            "accessible_pages": [],
+            "workspace_access": False
+        }
+        
+        try:
+            # 기본 검색으로 접근 가능한 페이지 확인
+            search_results = self._retry_api_call(
+                self.notion.search,
+                filter={"value": "page", "property": "object"},
+                page_size=10
+            )
+            
+            accessible_pages = []
+            for result in search_results.get("results", []):
+                if result.get("object") == "page":
+                    accessible_pages.append({
+                        "id": result["id"],
+                        "title": self._extract_page_title(result),
+                        "parent": result.get("parent", {})
+                    })
+            
+            permissions["accessible_pages"] = accessible_pages
+            permissions["workspace_access"] = len(accessible_pages) > 0
+            
+            # 데이터베이스 생성 권한 확인을 위해 테스트 페이지에서 시도
+            if accessible_pages:
+                permissions["can_create_databases"] = True
+                print(f"접근 가능한 페이지 {len(accessible_pages)}개 발견")
+            
+        except Exception as e:
+            print(f"권한 검증 중 오류: {str(e)}")
+        
+        return permissions
+    
+    def _extract_page_title(self, page: Dict[str, Any]) -> str:
+        """
+        페이지에서 제목을 추출합니다.
+        
+        Args:
+            page: 페이지 객체
+            
+        Returns:
+            페이지 제목
+        """
+        if "properties" in page:
+            # 데이터베이스 페이지의 경우
+            for prop_name, prop in page["properties"].items():
+                if prop.get("type") == "title":
+                    title_objects = prop.get("title", [])
+                    if title_objects:
+                        return "".join(obj.get("plain_text", "") for obj in title_objects)
+        
+        # 일반 페이지의 경우
+        if "title" in page and page["title"]:
+            return "".join(obj.get("plain_text", "") for obj in page["title"])
+            
+        return "Untitled"
+    
+    def _determine_best_parent_location(self) -> Optional[str]:
+        """
+        데이터베이스 생성을 위한 최적의 부모 위치를 결정합니다.
+        
+        Returns:
+            부모 페이지 ID 또는 None
+        """
+        print("데이터베이스 생성을 위한 최적의 위치를 찾는 중...")
+        
+        # 권한 검증
+        permissions = self._validate_token_permissions()
+        
+        if not permissions["workspace_access"]:
+            raise ValueError(
+                "워크스페이스에 접근할 수 없습니다. "
+                "통합(integration) 권한을 확인하고 페이지를 공유했는지 확인하세요."
+            )
+        
+        accessible_pages = permissions["accessible_pages"]
+        
+        # 1. 사용자가 지정한 parent_page_id가 있으면 우선 사용
+        if self.parent_page_id:
+            # 접근 가능한 페이지 목록에서 확인
+            for page in accessible_pages:
+                if page["id"] == self.parent_page_id:
+                    print(f"지정된 부모 페이지 사용: {page['title']}")
+                    return self.parent_page_id
+            
+            # 직접 확인 시도
+            try:
+                page = self._retry_api_call(self.notion.pages.retrieve, page_id=self.parent_page_id)
+                print(f"지정된 부모 페이지 확인됨: {self._extract_page_title(page)}")
+                return self.parent_page_id
+            except Exception:
+                print(f"지정된 부모 페이지 '{self.parent_page_id}'에 접근할 수 없습니다.")
+        
+        # 2. 워크스페이스 루트 레벨 페이지 찾기
+        root_pages = []
+        for page in accessible_pages:
+            parent = page.get("parent", {})
+            if parent.get("type") == "workspace":
+                root_pages.append(page)
+        
+        if root_pages:
+            # 첫 번째 루트 페이지 사용
+            selected_page = root_pages[0]
+            print(f"워크스페이스 루트 페이지 사용: {selected_page['title']}")
+            return selected_page["id"]
+        
+        # 3. 가장 적합한 페이지 선택 (제목 기준)
+        if accessible_pages:
+            # "Blog", "Posts", "Content" 등의 키워드가 있는 페이지 우선
+            blog_keywords = ["blog", "post", "content", "article", "write"]
+            
+            for keyword in blog_keywords:
+                for page in accessible_pages:
+                    if keyword.lower() in page["title"].lower():
+                        print(f"블로그 관련 페이지 발견, 사용: {page['title']}")
+                        return page["id"]
+            
+            # 키워드가 없으면 첫 번째 페이지 사용
+            selected_page = accessible_pages[0]
+            print(f"기본 페이지 사용: {selected_page['title']}")
+            return selected_page["id"]
+        
+        # 4. 접근 가능한 페이지가 없으면 오류
+        raise ValueError(
+            "데이터베이스를 생성할 수 있는 페이지가 없습니다. "
+            "통합(integration)에 최소 하나의 페이지를 공유하세요."
+        )
     
     def _get_common_database_properties(self) -> Dict[str, Any]:
         """
@@ -152,64 +342,87 @@ class NotionSetup:
     def create_hugo_database(self) -> Dict[str, Any]:
         """
         Hugo 블로그 포스트를 위한 Notion 데이터베이스를 생성합니다.
-        parent_page_id가 설정되어 있으면 해당 페이지에 생성하고,
-        설정되어 있지 않으면 워크스페이스 루트에 생성합니다.
+        자동으로 최적의 위치를 찾아 생성합니다.
         
         Returns:
             생성된 데이터베이스 객체
         """
+        print(f"'{self.database_name}' 데이터베이스 생성을 시작합니다...")
+        
+        # 최적의 부모 위치 결정
+        try:
+            parent_page_id = self._determine_best_parent_location()
+        except Exception as e:
+            print(f"부모 위치 결정 실패: {str(e)}")
+            raise ValueError(
+                f"데이터베이스 생성 위치를 결정할 수 없습니다: {str(e)}\n"
+                "해결 방법:\n"
+                "1. 통합(integration)에 페이지를 공유하세요\n"
+                "2. --parent-page 옵션으로 특정 페이지 ID를 지정하세요\n"
+                "3. 대화형 모드(-i)를 사용하세요"
+            ) from e
+        
         # 데이터베이스 속성 정의
         properties = self._get_common_database_properties()
         
         # 데이터베이스 타이틀 정의
         title = [{"type": "text", "text": {"content": self.database_name}}]
         
-        # 데이터베이스 생성 요청 (상위 페이지 ID 유무에 따라 다르게 처리)
-        if self.parent_page_id:
-            print(f"상위 페이지 '{self.parent_page_id}'에 데이터베이스 생성 중...")
-            database = self.notion.databases.create(
-                parent={"type": "page_id", "page_id": self.parent_page_id},
+        # 데이터베이스 생성 요청 (재시도 로직 포함)
+        try:
+            print(f"페이지 '{parent_page_id}'에 데이터베이스 생성 중...")
+            database = self._retry_api_call(
+                self.notion.databases.create,
+                parent={"type": "page_id", "page_id": parent_page_id},
                 title=title,
                 properties=properties
             )
-        else:
-            # 워크스페이스 루트에 생성하려면 사용자의 워크스페이스 루트 페이지 ID가 필요함
-            # Notion API는 더 이상 직접적인 parent={"type": "workspace"}를 지원하지 않음
-            print("워크스페이스 루트에 데이터베이스 생성 중...")
-            try:
-                # 먼저 사용자의 루트 페이지 가져오기 시도
-                search_results = self.notion.search(
-                    query="",
-                    filter={
-                        "value": "page",
-                        "property": "object"
-                    },
-                    page_size=10
-                )
-                root_pages = search_results.get("results", [])
-                
-                if not root_pages:
-                    raise ValueError("워크스페이스 루트 페이지를 찾을 수 없습니다. "
-                                    "--parent-page 옵션을 사용하여 특정 페이지 ID를 지정하세요.")
-                
-                # 첫 번째 페이지를 루트 페이지로 사용
-                root_page_id = root_pages[0]["id"]
-                
-                # 선택한 페이지에 데이터베이스 생성
-                database = self.notion.databases.create(
-                    parent={"type": "page_id", "page_id": root_page_id},
-                    title=title,
-                    properties=properties
-                )
-                
-            except APIResponseError as e:
-                if "parent.type" in str(e) or "parent.page_id" in str(e):
-                    raise ValueError("워크스페이스 루트에 데이터베이스를 생성할 권한이 없습니다. "
-                                    "상위 페이지 ID를 지정하거나 통합 권한을 확인하세요.") from e
-                raise
+            
+            print(f"✅ 데이터베이스가 성공적으로 생성되었습니다!")
+            print(f"📄 데이터베이스 ID: {database['id']}")
+            print(f"🔗 URL: https://notion.so/{database['id'].replace('-', '')}")
+            
+            return database
+            
+        except APIResponseError as e:
+            error_msg = self._format_api_error(e)
+            raise ValueError(f"데이터베이스 생성 실패: {error_msg}") from e
+        except Exception as e:
+            raise ValueError(f"예상치 못한 오류로 데이터베이스 생성 실패: {str(e)}") from e
+    
+    def _format_api_error(self, error: APIResponseError) -> str:
+        """
+        API 오류를 사용자 친화적인 메시지로 변환합니다.
         
-        print(f"데이터베이스가 생성되었습니다: {database['id']}")
-        return database
+        Args:
+            error: API 응답 오류
+            
+        Returns:
+            사용자 친화적인 오류 메시지
+        """
+        error_code = getattr(error, 'code', None)
+        error_message = str(error)
+        
+        if error_code == "unauthorized":
+            return (
+                "권한이 없습니다. 노션 API 토큰이 올바른지 확인하세요.\n"
+                "토큰 생성: https://www.notion.so/my-integrations"
+            )
+        elif error_code == "object_not_found":
+            return (
+                "지정된 페이지를 찾을 수 없습니다. 페이지 ID를 확인하고 "
+                "통합(integration)에 해당 페이지가 공유되었는지 확인하세요."
+            )
+        elif "validation_error" in error_message.lower():
+            return (
+                "요청 데이터에 오류가 있습니다. 데이터베이스 속성 정의를 확인하세요."
+            )
+        elif "rate_limited" in error_message.lower():
+            return (
+                "API 요청 한도를 초과했습니다. 잠시 후 다시 시도하세요."
+            )
+        else:
+            return f"API 오류: {error_message}"
 
     def create_sample_post(self, database_id: str) -> Dict[str, Any]:
         """
@@ -507,15 +720,27 @@ class NotionSetup:
             }
         ]
         
-        # 페이지 생성 요청
-        page = self.notion.pages.create(
-            parent={"database_id": database_id},
-            properties=properties,
-            children=children
-        )
-        
-        print(f"샘플 포스트가 생성되었습니다: {page['id']}")
-        return page
+        # 페이지 생성 요청 (재시도 로직 포함)
+        try:
+            print("샘플 포스트 생성 중...")
+            page = self._retry_api_call(
+                self.notion.pages.create,
+                parent={"database_id": database_id},
+                properties=properties,
+                children=children
+            )
+            
+            print(f"✅ 샘플 포스트가 성공적으로 생성되었습니다!")
+            print(f"📄 페이지 ID: {page['id']}")
+            print(f"🔗 URL: https://notion.so/{page['id'].replace('-', '')}")
+            
+            return page
+            
+        except APIResponseError as e:
+            error_msg = self._format_api_error(e)
+            raise ValueError(f"샘플 포스트 생성 실패: {error_msg}") from e
+        except Exception as e:
+            raise ValueError(f"예상치 못한 오류로 샘플 포스트 생성 실패: {str(e)}") from e
 
     def update_config(self, database_id: str, target_folder: str) -> None:
         """
@@ -581,6 +806,213 @@ class NotionSetup:
             yaml.dump(config, file, default_flow_style=False)
         
         print(f"설정 파일이 업데이트되었습니다: {config_path}")
+    
+    def quick_setup(self, target_folder: str = "posts") -> Dict[str, Any]:
+        """
+        원스톱 빠른 설정: 노션 키만으로 자동 DB 생성 및 샘플 포스트 생성
+        
+        Args:
+            target_folder: 대상 폴더 (기본값: "posts")
+            
+        Returns:
+            설정 결과
+        """
+        print("🚀 노션-휴고 원스톱 설정을 시작합니다!")
+        print("=" * 60)
+        
+        setup_result = {
+            "success": False,
+            "database_id": None,
+            "sample_post_id": None,
+            "config_updated": False,
+            "errors": []
+        }
+        
+        try:
+            # 1단계: 데이터베이스 생성
+            print("\n📊 1단계: 노션 데이터베이스 생성")
+            print("-" * 40)
+            
+            database = self.create_hugo_database()
+            setup_result["database_id"] = database["id"]
+            
+            # 2단계: 샘플 포스트 생성
+            print("\n📝 2단계: 샘플 포스트 생성")
+            print("-" * 40)
+            
+            sample_post = self.create_sample_post(database["id"])
+            setup_result["sample_post_id"] = sample_post["id"]
+            
+            # 3단계: 설정 파일 업데이트
+            print("\n⚙️  3단계: 설정 파일 업데이트")
+            print("-" * 40)
+            
+            self.update_config(database["id"], target_folder)
+            setup_result["config_updated"] = True
+            
+            # 완료
+            setup_result["success"] = True
+            
+            print("\n🎉 원스톱 설정 완료!")
+            print("=" * 60)
+            print("✅ 노션 데이터베이스가 생성되었습니다")
+            print("✅ 샘플 포스트가 추가되었습니다")
+            print("✅ 설정 파일이 업데이트되었습니다")
+            
+            print(f"\n🔗 노션에서 확인하기:")
+            print(f"   데이터베이스: https://notion.so/{database['id'].replace('-', '')}")
+            print(f"   샘플 포스트: https://notion.so/{sample_post['id'].replace('-', '')}")
+            
+            print(f"\n🚀 다음 단계:")
+            print(f"   python notion_hugo_app.py 명령으로 블로그 동기화를 시작하세요!")
+            
+            return setup_result
+            
+        except Exception as e:
+            error_message = str(e)
+            setup_result["errors"].append(error_message)
+            
+            print(f"\n❌ 설정 중 오류가 발생했습니다:")
+            print(f"   {error_message}")
+            
+            # 부분 성공한 내용 표시
+            if setup_result["database_id"]:
+                print(f"\n📊 생성된 데이터베이스: {setup_result['database_id']}")
+                print(f"   URL: https://notion.so/{setup_result['database_id'].replace('-', '')}")
+            
+            if setup_result["sample_post_id"]:
+                print(f"\n📝 생성된 샘플 포스트: {setup_result['sample_post_id']}")
+                print(f"   URL: https://notion.so/{setup_result['sample_post_id'].replace('-', '')}")
+            
+            # 오류 해결 가이드
+            print(f"\n🔧 문제 해결 방법:")
+            if "권한" in error_message or "unauthorized" in error_message.lower():
+                print("   1. 노션 API 토큰이 올바른지 확인하세요")
+                print("   2. 통합(integration)에 페이지를 공유했는지 확인하세요")
+                print("   3. 통합 권한에 'Insert content' 권한이 있는지 확인하세요")
+            elif "찾을 수 없습니다" in error_message or "not_found" in error_message.lower():
+                print("   1. 지정한 페이지 ID가 올바른지 확인하세요")
+                print("   2. 해당 페이지가 통합에 공유되었는지 확인하세요")
+            else:
+                print("   1. 네트워크 연결을 확인하세요")
+                print("   2. 노션 서비스 상태를 확인하세요")
+                print("   3. 잠시 후 다시 시도하세요")
+            
+            return setup_result
+    
+    def validate_setup(self) -> Dict[str, Any]:
+        """
+        현재 설정을 검증합니다.
+        
+        Returns:
+            검증 결과
+        """
+        validation_result = {
+            "valid": True,
+            "token_valid": False,
+            "workspace_accessible": False,
+            "config_exists": False,
+            "database_accessible": False,
+            "recommendations": [],
+            "errors": []
+        }
+        
+        try:
+            print("🔍 노션-휴고 설정을 검증하는 중...")
+            
+            # 1. 토큰 검증
+            try:
+                permissions = self._validate_token_permissions()
+                validation_result["token_valid"] = True
+                validation_result["workspace_accessible"] = permissions["workspace_access"]
+                
+                if permissions["workspace_access"]:
+                    print("✅ 노션 API 토큰이 유효하고 워크스페이스에 접근할 수 있습니다")
+                else:
+                    print("⚠️  노션 API 토큰은 유효하지만 워크스페이스 접근이 제한됩니다")
+                    validation_result["recommendations"].append(
+                        "통합(integration)에 최소 하나의 페이지를 공유하세요"
+                    )
+                    
+            except Exception as e:
+                validation_result["token_valid"] = False
+                validation_result["errors"].append(f"토큰 검증 실패: {str(e)}")
+                print(f"❌ 노션 API 토큰 검증 실패: {str(e)}")
+            
+            # 2. 설정 파일 검증
+            config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'notion-hugo.config.yaml')
+            if os.path.exists(config_path):
+                validation_result["config_exists"] = True
+                print("✅ 설정 파일이 존재합니다")
+                
+                # 설정 파일에서 데이터베이스 ID 확인
+                try:
+                    with open(config_path, 'r') as file:
+                        config = yaml.safe_load(file) or {}
+                    
+                    databases = config.get('mount', {}).get('databases', [])
+                    if databases and databases[0].get('database_id'):
+                        database_id = databases[0]['database_id']
+                        
+                        # 데이터베이스 접근 검증
+                        try:
+                            db = self._retry_api_call(self.notion.databases.retrieve, database_id=database_id)
+                            validation_result["database_accessible"] = True
+                            print(f"✅ 설정된 데이터베이스에 접근할 수 있습니다: {self._extract_page_title(db)}")
+                        except Exception:
+                            validation_result["errors"].append(f"설정된 데이터베이스 '{database_id}'에 접근할 수 없습니다")
+                            print(f"❌ 설정된 데이터베이스에 접근할 수 없습니다")
+                            validation_result["recommendations"].append(
+                                "데이터베이스가 통합에 공유되었는지 확인하거나 새로 설정하세요"
+                            )
+                    else:
+                        validation_result["recommendations"].append("설정 파일에 데이터베이스 ID가 없습니다")
+                        
+                except Exception as e:
+                    validation_result["errors"].append(f"설정 파일 읽기 실패: {str(e)}")
+                    print(f"❌ 설정 파일 읽기 실패: {str(e)}")
+            else:
+                validation_result["config_exists"] = False
+                print("⚠️  설정 파일이 없습니다")
+                validation_result["recommendations"].append("--setup-db 또는 --quick-setup으로 초기 설정을 진행하세요")
+            
+            # 3. 전체 유효성 판단
+            validation_result["valid"] = (
+                validation_result["token_valid"] and
+                validation_result["workspace_accessible"] and
+                validation_result["config_exists"] and
+                (validation_result["database_accessible"] or not databases)
+            )
+            
+            # 결과 요약
+            print("\n📋 검증 결과 요약:")
+            print(f"   토큰 유효성: {'✅' if validation_result['token_valid'] else '❌'}")
+            print(f"   워크스페이스 접근: {'✅' if validation_result['workspace_accessible'] else '❌'}")
+            print(f"   설정 파일 존재: {'✅' if validation_result['config_exists'] else '❌'}")
+            print(f"   데이터베이스 접근: {'✅' if validation_result['database_accessible'] else '❌'}")
+            
+            if validation_result["recommendations"]:
+                print("\n💡 권장사항:")
+                for i, rec in enumerate(validation_result["recommendations"], 1):
+                    print(f"   {i}. {rec}")
+            
+            if validation_result["errors"]:
+                print("\n❌ 발견된 문제:")
+                for i, error in enumerate(validation_result["errors"], 1):
+                    print(f"   {i}. {error}")
+            
+            if validation_result["valid"]:
+                print("\n🎉 모든 검증을 통과했습니다! 노션-휴고를 사용할 준비가 되었습니다.")
+            else:
+                print("\n⚠️  일부 문제가 발견되었습니다. 위의 권장사항을 참고하여 수정하세요.")
+            
+            return validation_result
+            
+        except Exception as e:
+            validation_result["valid"] = False
+            validation_result["errors"].append(f"검증 중 예상치 못한 오류: {str(e)}")
+            print(f"❌ 검증 중 오류 발생: {str(e)}")
+            return validation_result
 
 class NotionMigration(NotionSetup):
     """노션 데이터베이스 마이그레이션을 위한 클래스"""

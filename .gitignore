@@ -55,6 +55,7 @@ data/error_temp/
 .vercel
 /docs/logs_40495168461/
 /content/posts/
+
 # Development logs (internal only)
 docs/development_logs/
 dev_handoffs/

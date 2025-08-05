@@ -119,6 +119,12 @@ def parse_arguments():
     interactive_group.add_argument(
         "--interactive", "-i", action="store_true", help="대화형 설정 모드로 실행"
     )
+    interactive_group.add_argument(
+        "--quick-setup", action="store_true", help="원스톱 빠른 설정 (노션 키만으로 자동 설정)"
+    )
+    interactive_group.add_argument(
+        "--validate", action="store_true", help="현재 노션-휴고 설정을 검증"
+    )
 
     return parser.parse_args()
 
@@ -1091,6 +1097,99 @@ def run_interactive_setup() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
+def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
+    """
+    원스톱 빠른 설정을 실행합니다.
+    
+    Args:
+        target_folder: 대상 폴더
+        
+    Returns:
+        설정 결과
+    """
+    try:
+        # 환경 변수 로드
+        load_dotenv()
+
+        from .cli_utils import (
+            print_header,
+            print_success,
+            print_error,
+            print_info,
+        )
+
+        if not os.environ.get("NOTION_TOKEN"):
+            raise ValueError("NOTION_TOKEN 환경 변수가 설정되지 않았습니다")
+
+        print_header("노션-휴고 원스톱 빠른 설정")
+        print_info("노션 API 키만으로 자동으로 데이터베이스를 생성하고 설정합니다.")
+        
+        # NotionSetup 인스턴스 생성
+        setup_config: NotionSetupConfig = {
+            "parent_page_id": None,  # 자동으로 최적 위치 결정
+            "database_name": "Hugo Blog Posts",
+            "notion_token": os.environ.get("NOTION_TOKEN"),
+        }
+        setup = NotionSetup(setup_config)
+
+        # 원스톱 설정 실행
+        result = setup.quick_setup(target_folder)
+        
+        if result["success"]:
+            print_success("원스톱 설정이 완료되었습니다!")
+            return {"success": True, "database_id": result["database_id"]}
+        else:
+            print_error("원스톱 설정에 실패했습니다.")
+            for error in result["errors"]:
+                print_error(f"- {error}")
+            return {"success": False, "errors": result["errors"]}
+
+    except Exception as e:
+        print(f"[Error] 원스톱 설정 실패: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def run_validation() -> Dict[str, Any]:
+    """
+    현재 설정을 검증합니다.
+    
+    Returns:
+        검증 결과
+    """
+    try:
+        # 환경 변수 로드
+        load_dotenv()
+
+        from .cli_utils import print_header
+
+        if not os.environ.get("NOTION_TOKEN"):
+            print_header("노션-휴고 설정 검증")
+            print("❌ NOTION_TOKEN 환경 변수가 설정되지 않았습니다")
+            print("\n해결 방법:")
+            print("1. .env 파일에 NOTION_TOKEN=your_token_here 추가")
+            print("2. 환경 변수로 직접 설정")
+            return {"success": False, "error": "NOTION_TOKEN 누락"}
+
+        print_header("노션-휴고 설정 검증")
+        
+        # NotionSetup 인스턴스 생성
+        setup_config: NotionSetupConfig = {
+            "parent_page_id": None,
+            "database_name": "Hugo Blog Posts",
+            "notion_token": os.environ.get("NOTION_TOKEN"),
+        }
+        setup = NotionSetup(setup_config)
+
+        # 검증 실행
+        result = setup.validate_setup()
+        
+        return {"success": result["valid"], "validation_result": result}
+
+    except Exception as e:
+        print(f"[Error] 설정 검증 실패: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 def main():
     """
     메인 함수 - 통합 파이프라인 실행
@@ -1105,8 +1204,24 @@ def main():
     hugo_args = args.hugo_args.split() if args.hugo_args else []
 
     try:
+        # 설정 검증 모드
+        if args.validate:
+            validation_result = run_validation()
+            sys.exit(0 if validation_result["success"] else 1)
+
+        # 원스톱 빠른 설정 모드
+        elif args.quick_setup:
+            quick_result = run_quick_setup(args.target_folder)
+
+            if not quick_result["success"]:
+                sys.exit(1)
+
+            # 빠른 설정 후 바로 동기화 실행
+            from .cli_utils import print_info
+            print_info("설정이 완료되었습니다. 노션-휴고 동기화를 시작합니다...")
+
         # 대화형 설정 모드
-        if args.interactive:
+        elif args.interactive:
             interactive_result = run_interactive_setup()
 
             if not interactive_result["success"]:
