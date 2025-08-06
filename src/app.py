@@ -478,7 +478,7 @@ def _print_manual_github_setup_instructions() -> None:
     print_info("\n🔑 Step 3: Set up GitHub secrets")
     print_info("   • Get your Notion token from .env file or environment")
     print_info("   • Set the secret (replace with your actual token):")
-    print_info("     gh secret set NOTION_TOKEN --body 'ntn_your_token_here'")
+    print_info("     gh secret set NOTION_TOKEN --body 'YOUR_NOTION_TOKEN'")
     
     print_info("\n📄 Step 4: Enable GitHub Pages")
     print_info("   • Go to your repository settings:")
@@ -668,8 +668,8 @@ def setup(token: str, target_folder: str, interactive: bool, migrate_from: Optio
         python app.py deploy status    # Check deployment status
     
     Examples:
-        python app.py setup --token ntn_your_token_here
-        python app.py setup --token ntn_your_token_here --interactive
+        python app.py setup --token YOUR_NOTION_TOKEN
+        python app.py setup --token YOUR_NOTION_TOKEN --interactive
     """
     print_header("🚀 Notion-Hugo 5-Minute Setup")
     print_info("Welcome! Let's get your blog up and running in just 5 minutes.")

@@ -18,13 +18,13 @@ Commands:
 
 Examples:
     # Complete setup from scratch
-    python app.py setup --token ntn_your_token_here
+    python app.py setup --token YOUR_NOTION_TOKEN
     
     # Setup without GitHub (manual deployment)
-    python app.py setup --token ntn_your_token_here --skip-github
+    python app.py setup --token YOUR_NOTION_TOKEN --skip-github
     
     # Interactive setup with choices
-    python app.py setup --token ntn_your_token_here --interactive
+    python app.py setup --token YOUR_NOTION_TOKEN --interactive
     
     # Just sync content from Notion
     python app.py sync
