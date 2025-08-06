@@ -108,34 +108,34 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
     def validate_notion_token(self) -> Tuple[bool, str]:
         """노션 토큰 유효성 검사"""
         if not self.notion_token:
-            return False, "토큰이 비어있습니다."
+            return False, "Token is empty."
 
         if not self.notion_token.startswith("ntn_"):
-            return False, "노션 토큰은 'ntn_'로 시작해야 합니다."
+            return False, "Notion token must start with 'ntn_'."
 
         if len(self.notion_token) < 50:
-            return False, "토큰이 너무 짧습니다. 올바른 노션 토큰인지 확인하세요."
+            return False, "Token is too short. Please check if it's a valid Notion token."
 
         # 실제 API 호출로 토큰 검증
         try:
             self.notion.search(query="", page_size=1)
-            return True, "유효한 토큰입니다."
+            return True, "Valid token."
         except APIResponseError as e:
-            return False, f"토큰이 유효하지 않습니다: {str(e)}"
+            return False, f"Invalid token: {str(e)}"
         except Exception as e:
-            return False, f"토큰 검증 중 오류 발생: {str(e)}"
+            return False, f"Error validating token: {str(e)}"
 
     def setup_hugo_scaffold(self) -> bool:
         """Hugo 스캐폴드 설정"""
-        self.update_progress("Hugo 스캐폴드 설정 중...")
+        self.update_progress("Setting up Hugo scaffold...")
 
         scaffold_dir = Path("scaffold")
         if not scaffold_dir.is_dir():
-            print("❌ 'scaffold' 디렉토리를 찾을 수 없습니다.")
+            print("❌ 'scaffold' directory not found.")
             return False
 
         try:
-            print(f"   📂 '{scaffold_dir}'의 내용을 프로젝트 루트에 복사 중...")
+            print(f"   📂 Copying contents of '{scaffold_dir}' to project root...")
             for item in scaffold_dir.iterdir():
                 dest_path = Path(item.name)
                 if item.is_dir():
@@ -144,15 +144,15 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                     shutil.copytree(item, dest_path)
                 else:
                     shutil.copy2(item, dest_path)
-            print("   ✅ 스캐폴드 복사 완료")
+            print("   ✅ Scaffold copied successfully")
             return True
         except Exception as e:
-            print(f"❌ 스캐폴드 설정 실패: {str(e)}")
+            print(f"❌ Failed to set up scaffold: {str(e)}")
             return False
 
     def detect_notion_permissions(self) -> Dict[str, Any]:
         """노션 API 권한 자동 감지"""
-        self.update_progress("노션 API 권한 감지 중...")
+        self.update_progress("Detecting Notion permissions...")
 
         permissions = {
             "workspace_access": False,
@@ -199,19 +199,19 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                 except:
                     pass
 
-            print(f"✅ 권한 감지 완료: {permissions['access_level']} 접근")
-            print(f"   📄 접근 가능한 페이지: {len(pages)}개")
+            print(f"✅ Permissions detected: {permissions['access_level']} access")
+            print(f"   📄 Accessible pages: {len(pages)}")
 
             return permissions
 
         except APIResponseError as e:
-            print(f"❌ 권한 감지 실패: {str(e)}")
+            print(f"❌ Failed to detect permissions: {str(e)}")
             permissions["errors"] = [str(e)]
             return permissions
 
     def create_optimized_database(self, permissions: Dict[str, Any]) -> Dict[str, Any]:
         """최적 위치에 데이터베이스 생성"""
-        self.update_progress("노션 데이터베이스 생성 중...")
+        self.update_progress("Creating Notion database...")
 
         # 데이터베이스 속성 정의 (Hugo 최적화)
         properties = {
@@ -270,10 +270,10 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
         try:
             # 최적 위치 결정 - 페이지에 생성
             if not permissions["recommended_parent"]:
-                raise ValueError("데이터베이스를 생성할 페이지가 없습니다.")
+                raise ValueError("No page found to create database.")
 
             print(
-                f"   📄 페이지에 생성... (ID: {permissions['recommended_parent'][:8]}...)"
+                f"   📄 Creating in page... (ID: {permissions['recommended_parent'][:8]}...)"
             )
             database = self.notion.databases.create(
                 parent={
@@ -289,7 +289,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                 self.database_id = database["id"]
             else:
                 self.database_id = getattr(database, "id", None)
-            print(f"✅ 데이터베이스 생성 완료: {self.database_id}")
+            print(f"✅ Database created: {self.database_id}")
 
             return {
                 "success": True,
@@ -298,15 +298,15 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
             }
 
         except Exception as e:
-            print(f"❌ 데이터베이스 생성 실패: {str(e)}")
+            print(f"❌ Failed to create database: {str(e)}")
             return {"success": False, "error": str(e)}
 
     def create_sample_posts(self) -> Dict[str, Any]:
         """샘플 포스트 자동 생성"""
-        self.update_progress("샘플 포스트 생성 중...")
+        self.update_progress("Creating sample posts...")
 
         if not self.database_id:
-            return {"success": False, "error": "데이터베이스 ID가 없습니다."}
+            return {"success": False, "error": "Database ID is missing."}
 
         now = datetime.now().isoformat()
         created_posts = []
@@ -314,9 +314,9 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
         # 샘플 포스트 데이터
         sample_posts = [
             {
-                "title": "🎉 블로그 시작하기 - Notion과 Hugo로 만드는 완벽한 블로그",
+                "title": "🎉 Starting Your Blog - Notion and Hugo for a Perfect Blog",
                 "slug": "getting-started-notion-hugo-blog",
-                "description": "Notion을 CMS로 사용하고 Hugo로 정적 사이트를 생성하는 블로그 시스템을 시작하는 방법을 알아보세요.",
+                "description": "Learn how to use Notion as a CMS and generate a static site with Hugo. Start your blog system today!",
                 "categories": ["Technology", "Tutorial"],
                 "tags": ["Hugo", "Notion", "Getting Started"],
                 "featured": True,
@@ -329,7 +329,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                 {
                                     "type": "text",
                                     "text": {
-                                        "content": "블로그에 오신 것을 환영합니다! 🎉"
+                                        "content": "Welcome to your blog! 🎉"
                                     },
                                 }
                             ]
@@ -343,7 +343,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                 {
                                     "type": "text",
                                     "text": {
-                                        "content": "Notion을 CMS로 사용하고 Hugo로 정적 사이트를 생성하는 혁신적인 블로그 시스템을 시작했습니다. 이 시스템의 장점을 알아보세요!"
+                                        "content": "We have started an innovative blog system using Notion as a CMS and Hugo for static site generation. Learn about its advantages!"
                                     },
                                 }
                             ]
@@ -354,7 +354,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                         "type": "heading_2",
                         "heading_2": {
                             "rich_text": [
-                                {"type": "text", "text": {"content": "🚀 주요 기능"}}
+                                {"type": "text", "text": {"content": "🚀 Key Features"}}
                             ]
                         },
                     },
@@ -366,7 +366,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                 {
                                     "type": "text",
                                     "text": {
-                                        "content": "Notion에서 직접 포스트 작성 및 편집"
+                                        "content": "Write and edit posts directly in Notion"
                                     },
                                 }
                             ]
@@ -380,7 +380,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                 {
                                     "type": "text",
                                     "text": {
-                                        "content": "Hugo를 통한 빠른 정적 사이트 생성"
+                                        "content": "Quick static site generation with Hugo"
                                     },
                                 }
                             ]
@@ -393,7 +393,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                             "rich_text": [
                                 {
                                     "type": "text",
-                                    "text": {"content": "자동 배포 및 동기화"},
+                                    "text": {"content": "Automatic deployment and synchronization"},
                                 }
                             ]
                         },
@@ -405,7 +405,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                             "rich_text": [
                                 {
                                     "type": "text",
-                                    "text": {"content": "환경변수 기반 보안 설정"},
+                                    "text": {"content": "Security settings based on environment variables"},
                                 }
                             ]
                         },
@@ -413,9 +413,9 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                 ],
             },
             {
-                "title": "📝 Notion에서 블로그 포스트 작성하는 방법",
+                "title": "📝 How to Write Blog Posts in Notion",
                 "slug": "how-to-write-blog-posts-in-notion",
-                "description": "Notion 데이터베이스에서 블로그 포스트를 작성하고 관리하는 완전한 가이드입니다.",
+                "description": "A complete guide on writing and managing blog posts in your Notion database.",
                 "categories": ["Tutorial"],
                 "tags": ["Notion", "Tutorial", "Blog"],
                 "featured": False,
@@ -428,7 +428,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                 {
                                     "type": "text",
                                     "text": {
-                                        "content": "Notion에서 블로그 포스트 작성하기"
+                                        "content": "Writing Blog Posts in Notion"
                                     },
                                 }
                             ]
@@ -442,7 +442,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                 {
                                     "type": "text",
                                     "text": {
-                                        "content": "이 데이터베이스에서 새 페이지를 만들어 블로그 포스트를 작성할 수 있습니다. 다음 단계를 따라해보세요:"
+                                        "content": "You can create a new page in this database to write a blog post. Follow these steps:"
                                     },
                                 }
                             ]
@@ -455,7 +455,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                             "rich_text": [
                                 {
                                     "type": "text",
-                                    "text": {"content": "1. 새 페이지 생성"},
+                                    "text": {"content": "1. Create a new page"},
                                 }
                             ]
                         },
@@ -468,7 +468,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                 {
                                     "type": "text",
                                     "text": {
-                                        "content": "데이터베이스에서 'New' 버튼을 클릭하여 새 페이지를 생성합니다."
+                                        "content": "Click the 'New' button in the database to create a new page."
                                     },
                                 }
                             ]
@@ -481,7 +481,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                             "rich_text": [
                                 {
                                     "type": "text",
-                                    "text": {"content": "2. 필수 속성 설정"},
+                                    "text": {"content": "2. Set required properties"},
                                 }
                             ]
                         },
@@ -498,7 +498,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                     },
                                     "annotations": {"bold": True},
                                 },
-                                {"type": "text", "text": {"content": ": 포스트 제목"}},
+                                {"type": "text", "text": {"content": ": Post title"}},
                             ]
                         },
                     },
@@ -517,7 +517,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                 {
                                     "type": "text",
                                     "text": {
-                                        "content": ": 체크하면 블로그에 게시됩니다"
+                                        "content": ": Check to publish to the blog"
                                     },
                                 },
                             ]
@@ -535,7 +535,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                                     },
                                     "annotations": {"bold": True},
                                 },
-                                {"type": "text", "text": {"content": ": 발행 날짜"}},
+                                {"type": "text", "text": {"content": ": Publication date"}},
                             ]
                         },
                     },
@@ -571,7 +571,7 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                     },
                     "Author": {
                         "rich_text": [
-                            {"type": "text", "text": {"content": "블로그 관리자"}}
+                            {"type": "text", "text": {"content": "Blog Administrator"}}
                         ]
                     },
                     "categories": {
@@ -609,9 +609,9 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
                     }
                 )
 
-                print(f"   ✅ 생성됨: {post_data['title']}")
+                print(f"   ✅ Created: {post_data['title']}")
 
-            print(f"✅ 샘플 포스트 {len(created_posts)}개 생성 완료")
+            print(f"✅ {len(created_posts)} sample posts created")
 
             return {
                 "success": True,
@@ -620,25 +620,25 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
             }
 
         except Exception as e:
-            print(f"❌ 샘플 포스트 생성 실패: {str(e)}")
+            print(f"❌ Failed to create sample posts: {str(e)}")
             return {"success": False, "error": str(e)}
 
     def setup_environment_security(self) -> bool:
         """환경변수 기반 보안 설정"""
-        self.update_progress("보안 환경 설정 중...")
+        self.update_progress("Setting up environment security...")
 
         try:
             # .env 파일 생성
-            env_content = f"""# Notion-Hugo 환경변수 설정 (자동 생성)
-# 이 파일은 Git에 커밋하지 마세요!
+            env_content = f"""# Notion-Hugo Environment Variables (Auto-generated)
+# Do not commit this file to Git!
 
-# 노션 API 토큰
+# Notion API Token
 NOTION_TOKEN={self.notion_token}
 
-# 데이터베이스 ID (폴더명 기반)
+# Database ID (based on folder name)
 NOTION_DATABASE_ID_POSTS={self.database_id}
 
-# 추가 설정 (필요시 수정)
+# Additional settings (modify if needed)
 HUGO_ENV=production
 HUGO_VERSION=0.140.0
 """
@@ -646,11 +646,11 @@ HUGO_VERSION=0.140.0
             with open(".env", "w") as f:
                 f.write(env_content)
 
-            print("   ✅ .env 파일 생성 완료")
+            print("   ✅ .env file created")
 
             # .gitignore 업데이트
             gitignore_entries = [
-                "\n# Notion-Hugo 보안 설정 (자동 추가)",
+                "\n# Notion-Hugo Security Settings (Auto-added)",
                 ".env",
                 ".env.local",
                 ".env.production",
@@ -668,9 +668,9 @@ HUGO_VERSION=0.140.0
             if ".env" not in existing_content:
                 with open(".gitignore", "a") as f:
                     f.write("\n".join(gitignore_entries))
-                print("   ✅ .gitignore 보안 설정 완료")
+                print("   ✅ .gitignore security settings added")
             else:
-                print("   ✅ .gitignore 이미 설정됨")
+                print("   ✅ .gitignore already configured")
 
             # 환경변수 설정
             os.environ["NOTION_TOKEN"] = self.notion_token
@@ -680,65 +680,65 @@ HUGO_VERSION=0.140.0
             return True
 
         except Exception as e:
-            print(f"❌ 보안 설정 실패: {str(e)}")
+            print(f"❌ Failed to set up security: {str(e)}")
             return False
 
     def create_enhanced_config(self) -> bool:
         """개선된 설정 파일 생성"""
-        self.update_progress("설정 파일 생성 중...")
+        self.update_progress("Creating configuration file...")
 
         try:
-            config_content = f"""# Notion-Hugo 통합 설정 파일 (원스톱 설치로 자동 생성)
-# 환경변수 우선, YAML 폴백 방식으로 database_id를 처리합니다.
+            config_content = f"""# Notion-Hugo Integrated Configuration File (Auto-generated by one-stop installer)
+# Prioritize environment variables, handle database_id with YAML fallback.
 
 mount:
   databases:
-  # 환경변수 NOTION_DATABASE_ID_POSTS에서 database_id를 자동 로드
+  # Load database_id automatically from environment variable NOTION_DATABASE_ID_POSTS
   - target_folder: posts
-    # 원스톱 설치 시 생성된 데이터베이스 ID가 자동으로 설정됩니다.
+    # The database_id generated by the one-stop installer will be automatically set.
     database_id: {self.database_id}
   
   manual: true
 
-# 파일명 생성 설정
+# Filename generation settings
 filename:
   format: "date-title"
   date_format: "%Y-%m-%d"
   korean_title: "slug"
 
-# 고급 설정
+# Advanced settings
 sync:
-  # 동기화 모드: "smart" (변경된 것만), "full" (전체)
+  # Sync mode: "smart" (only changed), "full" (all)
   mode: "smart"
-  # 배치 크기 (한 번에 처리할 페이지 수)
+  # Batch size (number of pages to process at once)
   batch_size: 10
-  # 재시도 횟수
+  # Retry count
   retry_count: 3
 
-# 콘텐츠 처리 설정
+# Content processing settings
 content:
-  # 이미지 처리
+  # Image processing
   image_optimization: true
-  # 코드 블록 하이라이팅
+  # Code block highlighting
   code_highlighting: true
-  # 수식 렌더링
+  # Math rendering
   math_rendering: true
 
-# 보안 및 배포 설정
+# Security and deployment settings
 security:
-  # 환경변수 기반 설정 활성화
+  # Enable security settings based on environment variables
   use_environment_variables: true
-  # Git에서 제외할 파일들이 자동으로 .gitignore에 추가됨
+  # Files to exclude from Git will be automatically added to .gitignore
   
 deployment:
-  # 자동 배포 활성화
+  # Enable automatic deployment
   auto_deploy: true
-  # 배포 트리거: "push" (Git 푸시 시), "schedule" (정기적)
+  # Deployment trigger: "push" (when Git pushes), "schedule" (regularly)
   trigger: "push"
-  # 정기 동기화 (cron 형식)
-  schedule: "0 */2 * * *"  # 2시간마다
+  # Regular synchronization (cron format)
+  schedule: "0 */2 * * *"  # Every 2 hours
 
-# 생성 정보
+# Generation info
 generated:
   timestamp: "{datetime.now().isoformat()}"
   database_id: "{self.database_id}"
@@ -748,11 +748,11 @@ generated:
             with open("notion-hugo.config.yaml", "w") as f:
                 f.write(config_content)
 
-            print("   ✅ notion-hugo.config.yaml 생성 완료")
+            print("   ✅ notion-hugo.config.yaml created")
             return True
 
         except Exception as e:
-            print(f"❌ 설정 파일 생성 실패: {str(e)}")
+            print(f"❌ Failed to create configuration file: {str(e)}")
             return False
 
     def choose_deployment_type(self) -> str:
@@ -761,13 +761,13 @@ generated:
             # 비대화형 모드에서는 GitHub Pages 기본 선택
             return "github-pages"
 
-        print("\n🚀 배포 방식을 선택하세요:")
-        print("1. GitHub Pages (무료, 안정적, 추천)")
-        print("2. Vercel (빠른 배포, 고급 기능)")
-        print("3. 로컬만 (배포 없음)")
+        print("\n🚀 Choose your deployment method:")
+        print("1. GitHub Pages (Free, Stable, Recommended)")
+        print("2. Vercel (Fast Deployment, Advanced Features)")
+        print("3. Local Only (No Deployment)")
 
         while True:
-            choice = input("선택 (1, 2, 또는 3): ").strip()
+            choice = input("Choose (1, 2, or 3): ").strip()
             if choice == "1":
                 return "github-pages"
             elif choice == "2":
@@ -775,21 +775,21 @@ generated:
             elif choice == "3":
                 return "local-only"
             else:
-                print("❌ 1, 2, 또는 3을 입력하세요.")
+                print("❌ Please enter 1, 2, or 3.")
 
     def setup_deployment_pipeline(self, deployment_type: str) -> bool:
         """배포 파이프라인 설정"""
-        self.update_progress(f"{deployment_type} 배포 설정 중...")
+        self.update_progress(f"Setting up {deployment_type} deployment...")
 
         if deployment_type == "github-pages":
             return self._setup_github_pages()
         elif deployment_type == "vercel":
             return self._setup_vercel()
         elif deployment_type == "local-only":
-            print("   ✅ 로컬 전용 설정 완료")
+            print("   ✅ Local-only setup complete")
             return True
         else:
-            print(f"❌ 지원하지 않는 배포 방식: {deployment_type}")
+            print(f"❌ Unsupported deployment type: {deployment_type}")
             return False
 
     def _setup_github_pages(self) -> bool:
@@ -806,7 +806,7 @@ on:
   push:
     branches: ["main", "master"]
   schedule:
-    # 매 2시간마다 자동 동기화
+    # Auto-sync every 2 hours
     - cron: '0 */2 * * *'
   workflow_dispatch:
 
@@ -857,9 +857,9 @@ jobs:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID_POSTS: ${{ secrets.NOTION_DATABASE_ID_POSTS }}
         run: |
-          echo "🔄 Notion에서 콘텐츠 동기화 중..."
+          echo "🔄 Syncing content from Notion..."
           python notion_hugo_app.py
-          echo "✅ 동기화 완료"
+          echo "✅ Sync complete"
       
       - name: Setup Pages
         id: pages
@@ -870,9 +870,9 @@ jobs:
           HUGO_ENVIRONMENT: production
           HUGO_ENV: production
         run: |
-          echo "🏗️ Hugo 빌드 시작..."
+          echo "🏗️ Starting Hugo build..."
           hugo --gc --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
-          echo "✅ 빌드 완료"
+          echo "✅ Build complete"
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -894,13 +894,13 @@ jobs:
             with open(workflow_dir / "hugo.yml", "w") as f:
                 f.write(workflow_content)
 
-            print("   ✅ GitHub Actions 워크플로우 생성 완료")
+            print("   ✅ GitHub Actions workflow created")
 
             # GitHub CLI로 secrets 설정 시도
             try:
                 subprocess.run(["gh", "--version"], check=True, capture_output=True)
 
-                print("   🔑 GitHub Secrets 자동 설정 중...")
+                print("   🔑 Setting up GitHub Secrets...")
 
                 # NOTION_TOKEN 설정
                 subprocess.run(
@@ -931,19 +931,19 @@ jobs:
                         capture_output=True,
                     )
 
-                print("   ✅ GitHub Secrets 자동 설정 완료")
+                print("   ✅ GitHub Secrets set up")
 
             except FileNotFoundError:
-                print("   ⚠️ GitHub CLI가 설치되지 않았습니다.")
-                print("   📋 수동 설정 방법:")
+                print("   ⚠️ GitHub CLI is not installed.")
+                print("   📋 Manual setup instructions:")
                 print(
-                    "   1. GitHub 저장소 → Settings → Secrets and variables → Actions"
+                    "   1. Go to GitHub repository → Settings → Secrets and variables → Actions"
                 )
-                print("   2. New repository secret 클릭")
+                print("   2. Click 'New repository secret'")
                 print(f"   3. NOTION_TOKEN = {self.notion_token}")
                 print(f"   4. NOTION_DATABASE_ID_POSTS = {self.database_id}")
             except subprocess.CalledProcessError:
-                print("   ⚠️ GitHub Secrets 자동 설정 실패. 수동으로 설정하세요.")
+                print("   ⚠️ Failed to set up GitHub Secrets automatically. Please set them manually.")
                 print(f"   NOTION_TOKEN = {self.notion_token}")
                 if self.database_id:
                     print(f"   NOTION_DATABASE_ID_POSTS = {self.database_id}")
@@ -951,7 +951,7 @@ jobs:
             return True
 
         except Exception as e:
-            print(f"❌ GitHub Pages 설정 실패: {str(e)}")
+            print(f"❌ Failed to set up GitHub Pages: {str(e)}")
             return False
 
     def _setup_vercel(self) -> bool:
@@ -974,13 +974,13 @@ jobs:
             with open("vercel.json", "w") as f:
                 json.dump(vercel_config, f, indent=2)
 
-            print("   ✅ vercel.json 생성 완료")
+            print("   ✅ vercel.json created")
 
             # Vercel CLI 확인 및 환경변수 설정
             try:
                 subprocess.run(["vercel", "--version"], check=True, capture_output=True)
 
-                print("   🔑 Vercel 환경변수 설정 중...")
+                print("   🔑 Setting up Vercel environment variables...")
 
                 # 환경변수 설정
                 try:
@@ -990,9 +990,9 @@ jobs:
                         text=True,
                         check=True,
                     )
-                    print("   ✅ NOTION_TOKEN 설정 완료")
+                    print("   ✅ NOTION_TOKEN set")
                 except subprocess.CalledProcessError:
-                    print("   ⚠️ NOTION_TOKEN 설정 실패 (이미 존재할 수 있음)")
+                    print("   ⚠️ NOTION_TOKEN might already exist.")
 
                 if self.database_id:
                     try:
@@ -1008,43 +1008,43 @@ jobs:
                             text=True,
                             check=True,
                         )
-                        print("   ✅ NOTION_DATABASE_ID_POSTS 설정 완료")
+                        print("   ✅ NOTION_DATABASE_ID_POSTS set")
                     except subprocess.CalledProcessError:
                         print(
-                            "   ⚠️ NOTION_DATABASE_ID_POSTS 설정 실패 (이미 존재할 수 있음)"
+                            "   ⚠️ NOTION_DATABASE_ID_POSTS might already exist."
                         )
 
-                print("   🚀 Vercel 배포를 시작합니다...")
+                print("   🚀 Starting Vercel deployment...")
                 # Vercel 배포 실행
                 result = subprocess.run(["vercel", "--prod"], check=False)
 
                 if result.returncode == 0:
-                    print("   ✅ Vercel 배포 완료")
+                    print("   ✅ Vercel deployment complete")
                 else:
                     print(
-                        "   ⚠️ Vercel 배포 중 문제가 발생했습니다. 수동으로 확인하세요."
+                        "   ⚠️ An issue occurred during Vercel deployment. Please check manually."
                     )
 
             except FileNotFoundError:
-                print("   📱 Vercel CLI가 설치되지 않았습니다.")
-                print("   🔗 Vercel 웹사이트에서 수동 배포:")
-                print("   1. https://vercel.com/new 방문")
-                print("   2. GitHub 저장소 연결")
-                print("   3. 환경변수 설정:")
+                print("   📱 Vercel CLI is not installed.")
+                print("   �� Deploy manually on Vercel website:")
+                print("   1. Visit https://vercel.com/new")
+                print("   2. Connect your GitHub repository")
+                print("   3. Set environment variables:")
                 print(f"      - NOTION_TOKEN = {self.notion_token}")
                 if self.database_id:
                     print(f"      - NOTION_DATABASE_ID_POSTS = {self.database_id}")
-                print("   4. Deploy 클릭")
+                print("   4. Click 'Deploy'")
 
             return True
 
         except Exception as e:
-            print(f"❌ Vercel 설정 실패: {str(e)}")
+            print(f"❌ Failed to set up Vercel: {str(e)}")
             return False
 
     def test_first_sync(self) -> bool:
         """첫 동기화 테스트"""
-        self.update_progress("첫 동기화 테스트 중...")
+        self.update_progress("Testing first sync...")
 
         try:
             # 드라이런 테스트
@@ -1055,10 +1055,10 @@ jobs:
             )
 
             if result.returncode == 0:
-                print("   ✅ 동기화 테스트 통과")
+                print("   ✅ Sync test passed")
 
                 # 실제 동기화 실행
-                print("   🔄 실제 동기화 실행 중...")
+                print("   🔄 Running actual sync...")
                 result = subprocess.run(
                     [sys.executable, "notion_hugo_app.py"],
                     capture_output=True,
@@ -1066,17 +1066,17 @@ jobs:
                 )
 
                 if result.returncode == 0:
-                    print("   ✅ 첫 동기화 완료")
+                    print("   ✅ First sync complete")
                     return True
                 else:
-                    print(f"   ❌ 동기화 실패: {result.stderr}")
+                    print(f"   ❌ Sync failed: {result.stderr}")
                     return False
             else:
-                print(f"   ❌ 동기화 테스트 실패: {result.stderr}")
+                print(f"   ❌ Sync test failed: {result.stderr}")
                 return False
 
         except Exception as e:
-            print(f"❌ 동기화 테스트 중 오류: {str(e)}")
+            print(f"❌ Error during sync test: {str(e)}")
             return False
 
     def show_completion_message(self) -> None:
@@ -1087,35 +1087,35 @@ jobs:
 
         print(
             f"""
-🎉 원스톱 설치 완료! 
-✅ 노션 데이터베이스 생성: {self.database_id or 'N/A'}
-✅ 샘플 포스트 2개 생성
-✅ 환경변수 보안 설정
-✅ 자동 배포 파이프라인 구성
-✅ 첫 동기화 완료
+🎉 Installation complete! 
+✅ Notion database created: {self.database_id or 'N/A'}
+✅ 2 sample posts created
+✅ Environment security settings
+✅ Automatic deployment pipeline configured
+✅ First sync complete
 
-🔗 노션 데이터베이스 바로가기:
+🔗 Notion database quick link:
 {database_url}
 
-📝 이제 할 일:
-1. 노션에서 새 페이지 추가하여 블로그 포스트 작성
-2. 'isPublished' 체크박스 체크
-3. 자동으로 블로그에 반영!
+👉 What to do next:
+1. Add new pages in Notion to write blog posts
+2. Check the 'isPublished' checkbox
+3. It will be reflected automatically in the blog!
 
-🚀 배포 정보:
-- 배포 방식: {self.deployment_type or 'N/A'}
-- 자동 동기화: 2시간마다 또는 Git 푸시 시
-- 환경변수 기반 보안 설정 완료
+🚀 Deployment Info:
+- Deployment method: {self.deployment_type or 'N/A'}
+- Automatic sync: Every 2 hours or on Git push
+- Environment security settings complete
 
-🔧 고급 설정:
-- 환경변수 추가: .env 파일 편집
-- 설정 변경: notion-hugo.config.yaml 편집
-- 로컬 테스트: python notion_hugo_app.py --dry-run
+🔧 Advanced Settings:
+- Add environment variables: Edit .env file
+- Change settings: Edit notion-hugo.config.yaml
+- Local test: python notion_hugo_app.py --dry-run
 
-📚 도움말:
-- 상세 가이드: docs/SETUP_GUIDE.md
-- 보안 가이드: docs/DATABASE_ID_SECURITY_GUIDE.md
-- 문제 해결: docs/TROUBLESHOOTING.md
+📚 Help:
+- Detailed guide: docs/SETUP_GUIDE.md
+- Security guide: docs/DATABASE_ID_SECURITY_GUIDE.md
+- Troubleshooting: docs/TROUBLESHOOTING.md
 """
         )
 
@@ -1125,7 +1125,7 @@ jobs:
             # 1. 토큰 검증
             is_valid, message = self.validate_notion_token()
             if not is_valid:
-                print(f"❌ 토큰 검증 실패: {message}")
+                print(f"❌ Token validation failed: {message}")
                 return False
 
             print(f"✅ {message}")
@@ -1137,14 +1137,14 @@ jobs:
             # 3. 권한 감지
             permissions = self.detect_notion_permissions()
             if not permissions["can_create_database"]:
-                print("❌ 데이터베이스 생성 권한이 없습니다.")
+                print("❌ No permission to create database.")
                 return False
 
             # 4. 데이터베이스 생성
             db_result = self.create_optimized_database(permissions)
             if not db_result["success"]:
                 print(
-                    f"❌ 데이터베이스 생성 실패: {db_result.get('error', '알 수 없는 오류')}"
+                    f"❌ Failed to create database: {db_result.get('error', 'Unknown error')}"
                 )
                 return False
 
@@ -1152,36 +1152,36 @@ jobs:
             posts_result = self.create_sample_posts()
             if not posts_result["success"]:
                 print(
-                    f"❌ 샘플 포스트 생성 실패: {posts_result.get('error', '알 수 없는 오류')}"
+                    f"❌ Failed to create sample posts: {posts_result.get('error', 'Unknown error')}"
                 )
                 return False
 
             # 6. 보안 설정
             if not self.setup_environment_security():
-                print("❌ 보안 설정 실패")
+                print("❌ Failed to set up security")
                 return False
 
             # 7. 설정 파일 생성
             if not self.create_enhanced_config():
-                print("❌ 설정 파일 생성 실패")
+                print("❌ Failed to create configuration file")
                 return False
 
             # 8. 배포 방식 선택 및 설정
             self.deployment_type = self.choose_deployment_type()
             if not self.setup_deployment_pipeline(self.deployment_type):
-                print("❌ 배포 설정 실패")
+                print("❌ Failed to set up deployment")
                 return False
 
             # 9. 첫 동기화 테스트
             if not self.test_first_sync():
-                print("⚠️ 첫 동기화 실패했지만 설정은 완료되었습니다.")
+                print("⚠️ First sync failed, but setup is complete.")
 
             # 완료 메시지
             self.show_completion_message()
             return True
 
         except Exception as e:
-            print(f"❌ 설치 중 예상치 못한 오류: {str(e)}")
+            print(f"❌ Unexpected error during installation: {str(e)}")
             return False
 
 
@@ -1196,14 +1196,14 @@ API 키만으로 3분 안에 완전한 블로그 시스템 구축!
 
     # 노션 토큰 입력
     while True:
-        token = input("🔑 노션 API 토큰을 입력하세요: ").strip()
+        token = input("🔑 Enter your Notion API token: ").strip()
         if not token:
-            print("❌ 토큰을 입력해주세요.")
+            print("❌ Please enter a token.")
             continue
 
         if not token.startswith("ntn_"):
-            print("❌ 노션 토큰은 'ntn_'로 시작해야 합니다.")
-            print("💡 토큰 받는 방법: https://notion.so/my-integrations")
+            print("❌ Notion token must start with 'ntn_'.")
+            print("💡 How to get a token: https://notion.so/my-integrations")
             continue
 
         break
@@ -1220,19 +1220,19 @@ def main():
         description="Notion-Hugo 원스톱 설치 시스템",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-예시:
+Examples:
   python setup.py --token secret_abc123
   python setup.py --interactive
-  # 또는 환경변수 사용:
+  # Or use environment variables:
   # NOTION_TOKEN=secret_... python setup.py
         """,
     )
 
     parser.add_argument(
-        "--token", help="노션 API 토큰 (환경변수 NOTION_TOKEN으로 대체 가능)"
+        "--token", help="Notion API token (can be replaced by NOTION_TOKEN environment variable)"
     )
     parser.add_argument(
-        "--interactive", "-i", action="store_true", help="대화형 설정 모드"
+        "--interactive", "-i", action="store_true", help="Interactive setup mode"
     )
 
     args = parser.parse_args()
@@ -1245,14 +1245,14 @@ def main():
     token = args.token or os.environ.get("NOTION_TOKEN")
 
     if not token:
-        print("❌ --token 인자 또는 NOTION_TOKEN 환경변수가 필요합니다.")
+        print("❌ --token argument or NOTION_TOKEN environment variable is required.")
         parser.print_help()
         return False
 
     # 토큰 기본 검증
     if not token.startswith("ntn_"):
-        print("❌ 노션 토큰은 'ntn_'로 시작해야 합니다.")
-        print("💡 토큰 받는 방법: https://www.notion.so/my-integrations")
+        print("❌ Notion token must start with 'ntn_'.")
+        print("💡 How to get a token: https://www.notion.so/my-integrations")
         return False
 
     # 설치 실행
@@ -1266,8 +1266,8 @@ if __name__ == "__main__":
         success = main()
         sys.exit(0 if success else 1)
     except KeyboardInterrupt:
-        print("\n❌ 사용자가 중단했습니다.")
+        print("\n❌ User interrupted.")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ 예상치 못한 오류: {e}")
+        print(f"\n❌ Unexpected error: {e}")
         sys.exit(1)

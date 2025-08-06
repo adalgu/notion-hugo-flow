@@ -248,7 +248,7 @@ Create a `.env` file with the following template:
 
 ```bash
 # Required: Notion API Token
-NOTION_TOKEN=ntn_your_notion_token_here
+NOTION_TOKEN=your_notion_token_here
 
 # Required: Database IDs (generated during setup)
 NOTION_DATABASE_ID_POSTS=your_database_id_here

@@ -776,7 +776,7 @@ class ConfigManager:
 # Copy this file to .env and fill in your actual values
 
 # 🔴 Required: Notion API Token
-NOTION_TOKEN=ntn_your_notion_token_here
+NOTION_TOKEN=your_notion_token_here
 
 # 🟡 Auto-generated: Database IDs (automatically set after setup.py)
 NOTION_DATABASE_ID_POSTS=auto_generated_database_id
