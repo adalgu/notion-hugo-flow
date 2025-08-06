@@ -118,15 +118,29 @@ setup_repository() {
     TARGET_REMOTE="https://github.com/$REPO_NAME.git"
     if [ "$CURRENT_REMOTE" != "$TARGET_REMOTE" ]; then
       print_message "warning" "Remote origin points to $CURRENT_REMOTE instead of $TARGET_REMOTE"
-      read -p "Do you want to update the remote origin? (y/n) " -n 1 -r
-      echo
-      if [[ $REPLY =~ ^[Yy]$ ]]; then
-        git remote set-url origin "$TARGET_REMOTE"
-        print_message "success" "Remote origin updated to: $TARGET_REMOTE"
+      
+      # Handle non-interactive mode
+      if [ "$NON_INTERACTIVE" = "true" ]; then
+        if [ "$AUTO_CONFIRM" = "yes" ]; then
+          print_message "info" "Auto-updating remote origin in non-interactive mode..."
+          git remote set-url origin "$TARGET_REMOTE"
+          print_message "success" "Remote origin updated to: $TARGET_REMOTE"
+        else
+          print_message "warning" "Continuing with existing remote in non-interactive mode: $CURRENT_REMOTE"
+          # Extract actual repo name from remote
+          REPO_NAME=$(echo "$CURRENT_REMOTE" | sed -e 's/.*github.com\/\(.*\)\.git/\1/')
+        fi
       else
-        print_message "warning" "Continuing with existing remote: $CURRENT_REMOTE"
-        # Extract actual repo name from remote
-        REPO_NAME=$(echo "$CURRENT_REMOTE" | sed -e 's/.*github.com\/\(.*\)\.git/\1/')
+        read -p "Do you want to update the remote origin? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+          git remote set-url origin "$TARGET_REMOTE"
+          print_message "success" "Remote origin updated to: $TARGET_REMOTE"
+        else
+          print_message "warning" "Continuing with existing remote: $CURRENT_REMOTE"
+          # Extract actual repo name from remote
+          REPO_NAME=$(echo "$CURRENT_REMOTE" | sed -e 's/.*github.com\/\(.*\)\.git/\1/')
+        fi
       fi
     else
       print_message "success" "Remote origin already set correctly to: $CURRENT_REMOTE"
@@ -140,25 +154,50 @@ push_code() {
   
   # Check for uncommitted changes
   if ! git diff-index --quiet HEAD --; then
-    print_message "warning" "You have uncommitted changes. Please commit them first or stash them."
-    read -p "Do you want to continue anyway? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      exit 1
+    print_message "warning" "You have uncommitted changes."
+    
+    # Handle non-interactive mode
+    if [ "$NON_INTERACTIVE" = "true" ]; then
+      if [ "$AUTO_CONFIRM" = "yes" ]; then
+        print_message "info" "Auto-continuing in non-interactive mode..."
+      else
+        print_message "error" "Cannot proceed with uncommitted changes in non-interactive mode."
+        exit 1
+      fi
+    else
+      read -p "Do you want to continue anyway? (y/n) " -n 1 -r
+      echo
+      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+      fi
     fi
   fi
   
   # Try to push, if it fails offer to force push
   if ! git push -u origin main 2>/dev/null; then
     print_message "warning" "Push failed. This might be due to unrelated histories or the remote repo having content."
-    read -p "Do you want to force push? This will OVERWRITE remote content! (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-      git push --force origin main
-      print_message "success" "Code force pushed to repository."
+    
+    # Handle non-interactive mode
+    if [ "$NON_INTERACTIVE" = "true" ]; then
+      if [ "$FORCE_PUSH" = "yes" ]; then
+        print_message "warning" "Auto-force pushing in non-interactive mode..."
+        git push --force origin main
+        print_message "success" "Code force pushed to repository."
+      else
+        print_message "error" "Push failed and FORCE_PUSH is not enabled. Aborting."
+        print_message "info" "To enable force push, set FORCE_PUSH=yes environment variable."
+        exit 1
+      fi
     else
-      print_message "error" "Push aborted. Please resolve the conflicts manually."
-      exit 1
+      read -p "Do you want to force push? This will OVERWRITE remote content! (y/n) " -n 1 -r
+      echo
+      if [[ $REPLY =~ ^[Yy]$ ]]; then
+        git push --force origin main
+        print_message "success" "Code force pushed to repository."
+      else
+        print_message "error" "Push aborted. Please resolve the conflicts manually."
+        exit 1
+      fi
     fi
   else
     print_message "success" "Code pushed to repository."
@@ -236,6 +275,13 @@ show_summary() {
 # Main execution
 main() {
   print_message "info" "Starting GitHub Pages setup for Notion-Hugo..."
+  
+  # Check for non-interactive mode
+  if [ "$NON_INTERACTIVE" = "true" ]; then
+    print_message "info" "Running in non-interactive mode..."
+    print_message "info" "AUTO_CONFIRM: ${AUTO_CONFIRM:-no}"
+    print_message "info" "FORCE_PUSH: ${FORCE_PUSH:-no}"
+  fi
   
   check_requirements
   load_env

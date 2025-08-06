@@ -1,19 +1,6 @@
-deployment:
-  auto_deploy: true
-  environment: production
-  trigger: push
-filename:
-  date_format: '%Y-%m-%d'
-  format: date-title
-  korean_title: slug
-mount:
-  databases:
-  - database_id: 2477522e-eb2f-81b0-97b0-f8a0c7f81c1e
-    target_folder: posts
-  - database_id: 2477522e-eb2f-8100-9aaa-d08817999824
-    target_folder: posts
-  manual: true
-security:
-  mask_sensitive_logs: true
-  token_validation: true
-  use_environment_variables: true
+notion:
+  mount:
+    databases:
+    - content_type: post
+      database_id: 2477522e-eb2f-81f5-b0bf-d0ac48e60931
+      target_folder: posts

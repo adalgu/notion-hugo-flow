@@ -2,6 +2,7 @@ baseURL: "https://gunn.kim"
 title: Exobrain
 paginate.pagerSize: 5
 theme: PaperMod
+mainSections: ["posts"]
 ignoreFiles:
   - "problematic/.*"
   - "problematic/ref_errors/.*"

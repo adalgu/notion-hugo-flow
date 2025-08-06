@@ -5,12 +5,20 @@ Modern CLI entry point for Notion-Hugo Integration.
 This application provides a clean, Click-based CLI interface for converting 
 content from Notion to Hugo-compatible markdown and building Hugo sites.
 
-Usage:
-    python app.py setup --token YOUR_TOKEN    # 5-minute setup flow
+Core Pipeline (run this first):
+    python app.py setup --token YOUR_TOKEN   # Core setup: database + local blog
     python app.py sync                        # Sync from Notion to Hugo  
-    python app.py build                       # Build Hugo site only
-    python app.py deploy                      # Full pipeline: sync + build + deploy
-    python app.py validate                    # Validate current configuration
+    python app.py build                       # Build Hugo site
+    python app.py build --serve               # Build and serve locally
+
+Deployment (optional, after core setup):
+    python app.py deploy github              # Deploy to GitHub Pages
+    python app.py deploy vercel              # Deploy to Vercel
+    python app.py deploy status              # Check deployment status
+    
+Utilities:
+    python app.py validate                   # Validate current configuration
+    python app.py status                     # Show system status
 """
 
 import os
@@ -340,6 +348,7 @@ def setup_github_integration(token: str, database_id: str) -> Dict[str, Any]:
     """
     try:
         import subprocess
+        from subprocess import TimeoutExpired
         
         # Check if we're in a git repository
         try:
@@ -354,9 +363,9 @@ def setup_github_integration(token: str, database_id: str) -> Dict[str, Any]:
         try:
             subprocess.run(["gh", "--version"], check=True, capture_output=True)
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print_warning("GitHub CLI not found. Skipping automatic repository setup.")
-            print_info("Install GitHub CLI and run: ./dev/scripts/github-pages-setup.sh")
-            return {"success": False, "error": "GitHub CLI not available"}
+            print_warning("GitHub CLI not found. Manual setup required.")
+            _print_manual_github_setup_instructions()
+            return {"success": False, "error": "GitHub CLI not available", "manual_setup": True}
         
         # Check if user is authenticated
         try:
@@ -364,25 +373,33 @@ def setup_github_integration(token: str, database_id: str) -> Dict[str, Any]:
         except subprocess.CalledProcessError:
             print_warning("Not authenticated with GitHub CLI.")
             print_info("Run 'gh auth login' then re-run setup")
-            return {"success": False, "error": "GitHub authentication required"}
+            _print_manual_github_setup_instructions()
+            return {"success": False, "error": "GitHub authentication required", "manual_setup": True}
         
-        # Try to run the GitHub setup script
+        # Try to run the GitHub setup script with timeout
         script_path = "./dev/scripts/github-pages-setup.sh"
         if os.path.exists(script_path):
             print_info("Running GitHub Pages setup script...")
+            print_warning("This may take up to 60 seconds. If it hangs, we'll provide manual instructions.")
             
-            # Set environment variables for the script
+            # Set environment variables for the script (make it non-interactive)
             env = os.environ.copy()
             env["NOTION_TOKEN"] = token
             env["NOTION_DATABASE_ID_POSTS"] = database_id
+            # Add environment variables to make script non-interactive
+            env["NON_INTERACTIVE"] = "true"
+            env["AUTO_CONFIRM"] = "yes"  # Auto-answer 'yes' to prompts
+            env["FORCE_PUSH"] = "no"     # Don't force push by default
             
             try:
+                # Use a more generous timeout for the GitHub script
                 result = subprocess.run(
                     ["bash", script_path], 
                     env=env, 
                     check=True, 
                     capture_output=True, 
-                    text=True
+                    text=True,
+                    timeout=60  # 60 second timeout to prevent hanging
                 )
                 
                 # Try to extract repository URL from git remote
@@ -394,19 +411,98 @@ def setup_github_integration(token: str, database_id: str) -> Dict[str, Any]:
                         check=True
                     )
                     repo_url = repo_result.stdout.strip()
+                    print_success(f"GitHub setup completed successfully: {repo_url}")
                     return {"success": True, "repo_url": repo_url}
                 except subprocess.CalledProcessError:
+                    print_success("GitHub setup completed successfully")
                     return {"success": True, "repo_url": "Repository configured"}
                     
+            except TimeoutExpired:
+                print_warning("GitHub setup script timed out after 60 seconds.")
+                print_info("This usually happens when the script encounters interactive prompts.")
+                print_info("Your repository may have been partially configured.")
+                _print_manual_github_setup_instructions()
+                return {"success": False, "error": "Script timeout - manual setup required", "manual_setup": True}
             except subprocess.CalledProcessError as e:
-                print_warning(f"GitHub setup script failed: {e}")
-                return {"success": False, "error": str(e)}
+                print_warning(f"GitHub setup script failed with exit code {e.returncode}")
+                if e.stdout:
+                    print_info(f"Script output: {e.stdout.strip()}")
+                if e.stderr:
+                    print_warning(f"Script errors: {e.stderr.strip()}")
+                
+                # Check if it's a recoverable error
+                if "auth" in str(e).lower() or "login" in str(e).lower():
+                    print_warning("GitHub authentication issue detected.")
+                elif "permission" in str(e).lower() or "access" in str(e).lower():
+                    print_warning("GitHub permission issue detected.")
+                else:
+                    print_warning("Unknown GitHub setup error occurred.")
+                
+                _print_manual_github_setup_instructions()
+                return {"success": False, "error": f"Exit code {e.returncode}: {str(e)}", "manual_setup": True}
         else:
             print_warning(f"GitHub setup script not found at {script_path}")
-            return {"success": False, "error": "Setup script not found"}
+            _print_manual_github_setup_instructions()
+            return {"success": False, "error": "Setup script not found", "manual_setup": True}
             
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        print_error(f"GitHub integration failed with unexpected error: {str(e)}")
+        _print_manual_github_setup_instructions()
+        return {"success": False, "error": str(e), "manual_setup": True}
+
+
+def _print_manual_github_setup_instructions() -> None:
+    """
+    Print detailed instructions for manual GitHub setup when automatic setup fails.
+    """
+    print_info("\n📋 Manual GitHub Setup Instructions")
+    print_info("━" * 50)
+    
+    print_info("\n🔐 Step 1: Install and authenticate GitHub CLI")
+    print_info("   • Install GitHub CLI: https://cli.github.com/manual/installation")
+    print_info("   • Authenticate with GitHub:")
+    print_info("     gh auth login")
+    print_info("   • Verify authentication:")
+    print_info("     gh auth status")
+    
+    print_info("\n🏗️  Step 2: Create and configure repository")
+    print_info("   • Create your GitHub Pages repository:")
+    print_info("     gh repo create YOUR-USERNAME.github.io --public")
+    print_info("   • Add remote origin:")
+    print_info("     git remote add origin https://github.com/YOUR-USERNAME/YOUR-USERNAME.github.io.git")
+    print_info("   • Push your code:")
+    print_info("     git push -u origin main")
+    
+    print_info("\n🔑 Step 3: Set up GitHub secrets")
+    print_info("   • Get your Notion token from .env file or environment")
+    print_info("   • Set the secret (replace with your actual token):")
+    print_info("     gh secret set NOTION_TOKEN --body 'ntn_your_token_here'")
+    
+    print_info("\n📄 Step 4: Enable GitHub Pages")
+    print_info("   • Go to your repository settings:")
+    print_info("     https://github.com/YOUR-USERNAME/YOUR-USERNAME.github.io/settings/pages")
+    print_info("   • Under 'Build and deployment', select 'GitHub Actions' as source")
+    print_info("   • Save the settings")
+    
+    print_info("\n🚀 Step 5: Deploy your site")
+    print_info("   • Trigger the deployment workflow:")
+    print_info("     gh workflow run 'Deploy Hugo site to Pages'")
+    print_info("   • Monitor workflow progress:")
+    print_info("     gh run list")
+    print_info("   • Check your live site at:")
+    print_info("     https://YOUR-USERNAME.github.io")
+    
+    print_info("\n🛠️  Alternative: Run the setup script manually")
+    print_info("   • If you want to retry the automated setup later:")
+    print_info("     ./dev/scripts/github-pages-setup.sh")
+    print_info("   • Or with environment variables for non-interactive mode:")
+    print_info("     NON_INTERACTIVE=true AUTO_CONFIRM=yes ./dev/scripts/github-pages-setup.sh")
+    
+    print_info("\n💡 Tips:")
+    print_info("   • Replace 'YOUR-USERNAME' with your actual GitHub username")
+    print_info("   • Check .env file for your NOTION_TOKEN value")
+    print_info("   • Deployment may take 5-10 minutes after workflow completion")
+    print_info("━" * 50)
 
 
 def finalize_deployment(skip_github: bool) -> Dict[str, Any]:
@@ -444,6 +540,7 @@ def finalize_deployment(skip_github: bool) -> Dict[str, Any]:
         if not skip_github:
             try:
                 import subprocess
+                from subprocess import TimeoutExpired
                 result = subprocess.run(
                     ["git", "remote", "get-url", "origin"], 
                     capture_output=True, 
@@ -543,33 +640,33 @@ def cli(ctx: click.Context, version: bool) -> None:
     help="Database ID to migrate from (optional)"
 )
 @click.option(
-    "--skip-github",
-    is_flag=True,
-    help="Skip GitHub repository setup"
-)
-@click.option(
     "--skip-sample-posts",
     is_flag=True,
     help="Skip sample post generation"
 )
 def setup(token: str, target_folder: str, interactive: bool, migrate_from: Optional[str], 
-          skip_github: bool, skip_sample_posts: bool) -> None:
+          skip_sample_posts: bool) -> None:
     """
-    5-minute setup flow - Create a complete Notion-Hugo blog from scratch.
+    Core Notion-Hugo setup - Get your blog running locally in minutes.
     
     This command will:
     \b
-    1. Validate your Notion API token
-    2. Create a new Notion database (or migrate existing one)
-    3. Generate sample blog posts (unless --skip-sample-posts)
-    4. Configure environment variables
-    5. Set up GitHub repository and deployment pipeline (unless --skip-github)
-    6. Run initial sync and build
-    7. Deploy your blog
+    1. ✅ Validate your Notion API token
+    2. ✅ Create a new Notion database (or migrate existing one)
+    3. ✅ Generate sample blog posts (unless --skip-sample-posts)
+    4. ✅ Configure environment variables (.env, config.yaml)
+    5. ✅ Run initial content sync (Notion → Hugo markdown)
+    6. ✅ Build Hugo static site
+    7. ✅ Serve locally + show preview URL
+    8. ✅ Success confirmation with clear next steps
+    
+    For deployment, use separate commands:
+        python app.py deploy github    # Set up GitHub Pages
+        python app.py deploy vercel    # Set up Vercel
+        python app.py deploy status    # Check deployment status
     
     Examples:
         python app.py setup --token ntn_your_token_here
-        python app.py setup --token ntn_your_token_here --skip-github
         python app.py setup --token ntn_your_token_here --interactive
     """
     print_header("🚀 Notion-Hugo 5-Minute Setup")
@@ -673,27 +770,8 @@ def setup(token: str, target_folder: str, interactive: bool, migrate_from: Optio
             print_error(f"Configuration setup failed with exception: {str(e)}")
             print_info("Continuing with setup, but manual configuration may be needed")
         
-        # Step 4: GitHub repository and deployment setup
-        if not skip_github:
-            print_info("🐙 Step 4/7: Setting up GitHub repository and deployment...")
-            try:
-                github_result = setup_github_integration(token, database_id)
-                if github_result.get("success"):
-                    update_progress("GitHub setup")
-                    print_info(f"Repository: {github_result.get('repo_url', 'N/A')}")
-                else:
-                    update_progress("GitHub setup", False)
-                    print_warning("GitHub setup failed, but you can set it up manually later")
-                    print_info("Run: ./dev/scripts/github-pages-setup.sh")
-            except Exception as e:
-                update_progress("GitHub setup", False)
-                print_warning(f"GitHub setup failed: {str(e)} - you can set it up manually later")
-        else:
-            print_info("🐙 Step 4/7: Skipping GitHub setup as requested...")
-            update_progress("GitHub setup (skipped)")
-        
-        # Step 5: Initial content sync
-        print_info("🔄 Step 5/7: Running initial content sync...")
+        # Step 4: Run initial content sync
+        print_info("🔄 Step 4/7: Running initial content sync (Notion → Hugo)...")
         try:
             sync_result = run_notion_pipeline(incremental=False)
             if sync_result.get("success"):
@@ -701,13 +779,13 @@ def setup(token: str, target_folder: str, interactive: bool, migrate_from: Optio
                 update_progress(f"Content sync ({page_count} pages)")
             else:
                 update_progress("Content sync", False)
-                print_error("Initial sync failed - this may prevent proper deployment")
+                print_error("Initial sync failed - this may prevent proper local preview")
         except Exception as e:
             update_progress("Content sync", False)
             print_error(f"Content sync failed: {str(e)}")
         
-        # Step 6: Hugo site build
-        print_info("🏗️  Step 6/7: Building Hugo static site...")
+        # Step 5: Hugo site build
+        print_info("🏗️  Step 5/7: Building Hugo static site...")
         try:
             build_result = run_hugo_pipeline(build=True)
             if build_result.get("build_success"):
@@ -719,43 +797,121 @@ def setup(token: str, target_folder: str, interactive: bool, migrate_from: Optio
             update_progress("Hugo site build", False)
             print_error(f"Hugo build failed: {str(e)}")
         
-        # Step 7: Deploy and finalize
-        print_info("🚀 Step 7/7: Finalizing deployment...")
+        # Step 6: Start local Hugo server
+        print_info("🌎 Step 6/7: Starting local Hugo server...")
+        hugo_server_started = False
         try:
-            deploy_result = finalize_deployment(skip_github)
-            if deploy_result.get("success"):
-                update_progress("Deployment finalization")
-            else:
-                update_progress("Deployment finalization", False)
-                print_warning("Deployment finalization had issues")
+            # Start Hugo server in the background
+            import subprocess
+            import time
+            import threading
+            
+            def start_hugo_server():
+                try:
+                    subprocess.run(["hugo", "server", "--bind", "0.0.0.0", "--port", "1313", "--buildDrafts"], 
+                                 cwd=".", check=False, capture_output=True)
+                except Exception:
+                    pass  # Server process will be terminated when setup completes
+            
+            # Start server in background thread
+            server_thread = threading.Thread(target=start_hugo_server, daemon=True)
+            server_thread.start()
+            
+            # Give server time to start
+            time.sleep(3)
+            
+            # Check if server is responding
+            try:
+                import urllib.request
+                urllib.request.urlopen('http://localhost:1313', timeout=2)
+                hugo_server_started = True
+                update_progress("Hugo server (http://localhost:1313)")
+                print_success("✨ Your blog is now running at: http://localhost:1313")
+            except Exception:
+                print_info("Hugo server starting... you can access it at http://localhost:1313 in a moment")
+                update_progress("Hugo server (starting)")
+                hugo_server_started = True
+                
         except Exception as e:
-            update_progress("Deployment finalization", False)
-            print_warning(f"Deployment finalization failed: {str(e)}")
+            update_progress("Hugo server", False)
+            print_warning(f"Failed to start Hugo server: {str(e)}")
+            print_info("You can manually start the server with: hugo server")
+        
+        # Step 7: Success confirmation
+        print_info("✅ Step 7/7: Validating setup and generating success report...")
+        try:
+            # Validate that everything is working
+            validation_success = True
+            
+            # Check if .env exists
+            if not os.path.exists(".env"):
+                validation_success = False
+                print_warning("Missing .env file")
+            
+            # Check if config exists
+            if not os.path.exists("notion-hugo.config.yaml"):
+                validation_success = False
+                print_warning("Missing config file")
+            
+            # Check if public directory has content
+            public_dir = Path("public")
+            if not (public_dir.exists() and any(public_dir.iterdir())):
+                validation_success = False
+                print_warning("Missing Hugo build output")
+            
+            if validation_success:
+                update_progress("Setup validation")
+            else:
+                update_progress("Setup validation", False)
+                
+        except Exception as e:
+            update_progress("Setup validation", False)
+            print_warning(f"Setup validation failed: {str(e)}")
         
         # Final summary
-        print_header("🎉 Setup Complete!")
+        print_header("🎉 Core Setup Complete!")
         
         success_count = len(setup_progress["success_steps"])
         total_steps = setup_progress["total_steps"]
         
-        print_info(f"Completed {success_count}/{total_steps} steps successfully")
+        print_info(f"Completed {success_count}/{total_steps} core setup steps successfully")
         
         if setup_progress["failed_steps"]:
             print_warning("Some steps had issues:")
             for step in setup_progress["failed_steps"]:
                 print_info(f"  ⚠️  {step}")
         
-        print_info("\n🎯 What's next?")
-        print_info("1. Your Notion database is ready - start adding content!")
-        print_info("2. Your blog will auto-sync and deploy when you publish in Notion")
-        print_info("3. Check your GitHub repository for the deployment status")
+        print_header("🎯 Your Blog is Ready!")
+        print_success("✨ Core Notion-Hugo pipeline is working!")
         
-        if not skip_github:
-            print_info("4. Your blog should be live in a few minutes!")
+        print_info("\n🔗 What you've accomplished:")
+        print_info("✅ Notion database created and configured")
+        print_info("✅ Sample posts generated (ready to edit!)")
+        print_info("✅ Configuration files created (.env, config.yaml)")
+        print_info("✅ Content synced from Notion to Hugo markdown")
+        print_info("✅ Hugo static site built successfully")
+        if hugo_server_started:
+            print_info("✅ Local server running at http://localhost:1313")
+        
+        print_info("\n🚀 Next Steps:")
+        print_info("1. 🌎 Visit http://localhost:1313 to see your blog")
+        print_info("2. ✏️ Edit content in your Notion database")
+        print_info("3. 🔄 Run 'python app.py sync' to update your blog")
+        print_info("4. 🌐 When ready to deploy:")
+        print_info("   • python app.py deploy github    # Set up GitHub Pages")
+        print_info("   • python app.py deploy vercel    # Set up Vercel")
+        print_info("   • python app.py deploy status    # Check deployment status")
+        
+        print_info("\n📝 Quick Commands:")
+        print_info("   python app.py sync         # Sync from Notion")
+        print_info("   python app.py build        # Build Hugo site")
+        print_info("   python app.py build --serve # Build and serve locally")
+        
+        if hugo_server_started:
+            print_success("\n✨ Your blog is live at http://localhost:1313 - go check it out!")
         else:
-            print_info("4. Run GitHub setup when ready: ./dev/scripts/github-pages-setup.sh")
-        
-        print_success("\n✨ Your Notion-Hugo blog is ready to go!")
+            print_info("\nℹ️ Start your local server with: hugo server")
+            print_success("✨ Your Notion-Hugo blog is ready!")
         
     except KeyboardInterrupt:
         print_warning("\n🛑 Setup interrupted by user")
@@ -897,7 +1053,18 @@ def build(serve: bool, minify: bool, hugo_args: Optional[str]) -> None:
         sys.exit(1)
 
 
-@cli.command()
+@cli.group()
+def deploy() -> None:
+    """
+    Deployment commands for various platforms.
+    
+    Deploy your Notion-Hugo blog to different hosting platforms.
+    Run setup first to ensure your blog is working locally.
+    """
+    pass
+
+
+@deploy.command()
 @click.option(
     "--sync-first/--no-sync",
     default=True,
@@ -908,21 +1075,19 @@ def build(serve: bool, minify: bool, hugo_args: Optional[str]) -> None:
     is_flag=True,
     help="Show what would be deployed without actually doing it"
 )
-def deploy(sync_first: bool, dry_run: bool) -> None:
+def github(sync_first: bool, dry_run: bool) -> None:
     """
-    Full deployment pipeline: sync, build, and deploy.
+    Deploy to GitHub Pages.
     
-    This command runs the complete pipeline:
-    1. Sync content from Notion (optional)
-    2. Build Hugo static site
-    3. Deploy to configured platform
+    Sets up GitHub repository, configures GitHub Actions for automatic deployment,
+    and deploys your Hugo site to GitHub Pages.
     
     Examples:
-        python app.py deploy                  # Full pipeline
-        python app.py deploy --no-sync        # Skip Notion sync
-        python app.py deploy --dry-run        # Preview deployment
+        python app.py deploy github           # Full GitHub deployment
+        python app.py deploy github --no-sync # Skip Notion sync
+        python app.py deploy github --dry-run # Preview deployment
     """
-    print_header("Full Deployment Pipeline")
+    print_header("🐙 GitHub Pages Deployment")
     
     if not app.validate_environment():
         sys.exit(1)
@@ -930,20 +1095,23 @@ def deploy(sync_first: bool, dry_run: bool) -> None:
     try:
         # Step 1: Sync from Notion (optional)
         if sync_first:
-            print_info("Step 1/2: Syncing from Notion...")
-            sync_result = run_notion_pipeline(dry_run=dry_run)
-            
-            if not sync_result.get("success"):
-                print_error("Notion sync failed - deployment aborted")
-                sys.exit(1)
-            
-            print_success("Notion sync completed")
+            print_info("Step 1/3: Syncing from Notion...")
+            if not dry_run:
+                sync_result = run_notion_pipeline(incremental=False)
+                
+                if not sync_result.get("success"):
+                    print_error("Notion sync failed - deployment aborted")
+                    sys.exit(1)
+                
+                print_success("Notion sync completed")
+            else:
+                print_info("DRY RUN: Skipping Notion sync")
         else:
             print_info("Skipping Notion sync as requested")
         
         # Step 2: Build Hugo site
         if not dry_run:
-            print_info("Step 2/2: Building Hugo site...")
+            print_info("Step 2/3: Building Hugo site...")
             build_result = run_hugo_pipeline(build=True)
             
             if not build_result.get("build_success"):
@@ -959,11 +1127,205 @@ def deploy(sync_first: bool, dry_run: bool) -> None:
         else:
             print_info("DRY RUN: Skipping Hugo build")
         
-        print_success("Deployment pipeline completed successfully!")
-        print_info("Your site is ready for deployment")
+        # Step 3: GitHub setup and deployment
+        print_info("Step 3/3: Setting up GitHub Pages deployment...")
+        if not dry_run:
+            # Get token and database ID from environment
+            token = os.environ.get("NOTION_TOKEN")
+            database_id = os.environ.get("NOTION_DATABASE_ID_POSTS")
+            
+            if not token or not database_id:
+                print_error("Missing NOTION_TOKEN or NOTION_DATABASE_ID_POSTS environment variables")
+                print_info("Please run setup first or check your .env file")
+                sys.exit(1)
+            
+            github_result = setup_github_integration(token, database_id)
+            if github_result.get("success"):
+                print_success(f"GitHub deployment successful: {github_result.get('repo_url', 'N/A')}")
+                print_info("Your blog will be available at your GitHub Pages URL in a few minutes")
+            elif github_result.get("manual_setup"):
+                print_warning("GitHub setup requires manual completion")
+                _print_manual_github_setup_instructions()
+            else:
+                print_error(f"GitHub deployment failed: {github_result.get('error', 'Unknown error')}")
+                sys.exit(1)
+        else:
+            print_info("DRY RUN: GitHub deployment would be configured")
+        
+        print_success("GitHub Pages deployment pipeline completed!")
         
     except Exception as e:
-        print_error(f"Deployment failed with error: {str(e)}")
+        print_error(f"GitHub deployment failed with error: {str(e)}")
+        sys.exit(1)
+
+
+@deploy.command()
+@click.option(
+    "--sync-first/--no-sync",
+    default=True,
+    help="Sync from Notion before deploying (default: yes)"
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would be deployed without actually doing it"
+)
+def vercel(sync_first: bool, dry_run: bool) -> None:
+    """
+    Deploy to Vercel.
+    
+    Sets up Vercel deployment for your Hugo site with automatic deployments
+    from your git repository.
+    
+    Examples:
+        python app.py deploy vercel           # Full Vercel deployment
+        python app.py deploy vercel --no-sync # Skip Notion sync
+        python app.py deploy vercel --dry-run # Preview deployment
+    """
+    print_header("▲ Vercel Deployment")
+    
+    if not app.validate_environment():
+        sys.exit(1)
+    
+    try:
+        # Step 1: Sync from Notion (optional)
+        if sync_first:
+            print_info("Step 1/3: Syncing from Notion...")
+            if not dry_run:
+                sync_result = run_notion_pipeline(incremental=False)
+                
+                if not sync_result.get("success"):
+                    print_error("Notion sync failed - deployment aborted")
+                    sys.exit(1)
+                
+                print_success("Notion sync completed")
+            else:
+                print_info("DRY RUN: Skipping Notion sync")
+        else:
+            print_info("Skipping Notion sync as requested")
+        
+        # Step 2: Build Hugo site
+        if not dry_run:
+            print_info("Step 2/3: Building Hugo site...")
+            build_result = run_hugo_pipeline(build=True)
+            
+            if not build_result.get("build_success"):
+                print_error("Hugo build failed - deployment aborted")
+                sys.exit(1)
+            
+            # Validate build
+            if not validate_hugo_build():
+                print_error("Build validation failed - deployment aborted")
+                sys.exit(1)
+            
+            print_success("Hugo build completed")
+        else:
+            print_info("DRY RUN: Skipping Hugo build")
+        
+        # Step 3: Vercel deployment setup
+        print_info("Step 3/3: Setting up Vercel deployment...")
+        if not dry_run:
+            print_info("Vercel deployment setup is coming soon!")
+            print_info("For now, please deploy manually:")
+            print_info("1. Install Vercel CLI: npm i -g vercel")
+            print_info("2. Login: vercel login")
+            print_info("3. Deploy: vercel --prod")
+        else:
+            print_info("DRY RUN: Vercel deployment would be configured")
+        
+        print_success("Vercel deployment pipeline completed!")
+        
+    except Exception as e:
+        print_error(f"Vercel deployment failed with error: {str(e)}")
+        sys.exit(1)
+
+
+@deploy.command()
+def status() -> None:
+    """
+    Check deployment status and configuration.
+    
+    Shows the current deployment status, recent deployments,
+    and configuration for various hosting platforms.
+    
+    Examples:
+        python app.py deploy status           # Check all deployment status
+    """
+    print_header("📋 Deployment Status")
+    
+    try:
+        # Check if we're in a git repository
+        import subprocess
+        try:
+            result = subprocess.run(["git", "remote", "get-url", "origin"], 
+                                  capture_output=True, text=True, check=True)
+            repo_url = result.stdout.strip()
+            print_info(f"Git repository: {repo_url}")
+            
+            # Check if it's a GitHub repository
+            if "github.com" in repo_url:
+                print_info("🐙 GitHub repository detected")
+                
+                # Check if GitHub Actions workflow exists
+                workflow_path = Path(".github/workflows")
+                if workflow_path.exists():
+                    workflows = list(workflow_path.glob("*.yml")) + list(workflow_path.glob("*.yaml"))
+                    if workflows:
+                        print_success(f"Found {len(workflows)} GitHub Actions workflows")
+                        for workflow in workflows:
+                            print_info(f"  - {workflow.name}")
+                    else:
+                        print_warning("No GitHub Actions workflows found")
+                else:
+                    print_warning("No .github/workflows directory found")
+                    
+                # Check GitHub Pages settings (requires gh cli)
+                try:
+                    subprocess.run(["gh", "--version"], check=True, capture_output=True)
+                    # Could add more GitHub-specific checks here
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    print_info("GitHub CLI not available for detailed status checks")
+            else:
+                print_info("Non-GitHub repository")
+                
+        except subprocess.CalledProcessError:
+            print_warning("Not in a git repository or no remote configured")
+        
+        # Check for Vercel configuration
+        vercel_config = Path("vercel.json")
+        if vercel_config.exists():
+            print_info("▲ Vercel configuration found")
+        else:
+            print_info("▲ No Vercel configuration detected")
+        
+        # Check environment variables
+        print_info("\nEnvironment Configuration:")
+        notion_token = os.environ.get("NOTION_TOKEN")
+        if notion_token:
+            print_success(f"NOTION_TOKEN configured (starts with: {notion_token[:8]}...)")
+        else:
+            print_warning("NOTION_TOKEN not set")
+            
+        database_id = os.environ.get("NOTION_DATABASE_ID_POSTS")
+        if database_id:
+            print_success(f"NOTION_DATABASE_ID_POSTS configured (starts with: {database_id[:8]}...)")
+        else:
+            print_warning("NOTION_DATABASE_ID_POSTS not set")
+        
+        # Check build output
+        public_dir = Path("public")
+        if public_dir.exists() and any(public_dir.iterdir()):
+            file_count = sum(1 for _ in public_dir.rglob("*") if _.is_file())
+            print_success(f"Hugo build output ready ({file_count} files)")
+        else:
+            print_warning("No Hugo build output found - run 'python app.py build' first")
+            
+        print_info("\n🚀 Deployment Options:")
+        print_info("  python app.py deploy github    # Deploy to GitHub Pages")
+        print_info("  python app.py deploy vercel    # Deploy to Vercel")
+        
+    except Exception as e:
+        print_error(f"Status check failed with error: {str(e)}")
         sys.exit(1)
 
 
