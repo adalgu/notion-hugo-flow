@@ -18,6 +18,7 @@ import sys
 import signal
 from pathlib import Path
 from typing import Dict, Any, Optional, List
+from datetime import datetime
 from dotenv import load_dotenv
 
 import click
@@ -173,15 +174,44 @@ Your blog is now ready for amazing content! 📝""",
                                 }
                             ]
                         },
-                        "Status": {
-                            "select": {
-                                "name": "Published"
+                        "Date": {
+                            "date": {
+                                "start": datetime.now().isoformat()
                             }
+                        },
+                        "isPublished": {
+                            "checkbox": True
+                        },
+                        "skipRendering": {
+                            "checkbox": False
+                        },
+                        "Description": {
+                            "rich_text": [
+                                {
+                                    "text": {
+                                        "content": f"Sample blog post: {post_data['title']}"
+                                    }
+                                }
+                            ]
                         },
                         "Tags": {
                             "multi_select": [
                                 {"name": tag} for tag in post_data["tags"]
                             ]
+                        },
+                        "categories": {
+                            "multi_select": [
+                                {"name": "Tutorial"}
+                            ]
+                        },
+                        "featured": {
+                            "checkbox": False
+                        },
+                        "ShowToc": {
+                            "checkbox": True
+                        },
+                        "HideSummary": {
+                            "checkbox": False
                         }
                     },
                     children=[
@@ -241,11 +271,19 @@ NOTION_DATABASE_ID_POSTS={database_id}
         print_info("Created .env file with your configuration")
         
         # Update config.yaml with the database ID
-        config_manager = ConfigManager()
-        config = config_manager.load_config()
-        
-        # Update the database configuration
-        if "notion" in config and "mount" in config["notion"] and "databases" in config["notion"]["mount"]:
+        try:
+            config_manager = ConfigManager()
+            config = config_manager.load_config()
+            
+            # Ensure the structure exists
+            if "notion" not in config:
+                config["notion"] = {}
+            if "mount" not in config["notion"]:
+                config["notion"]["mount"] = {}
+            if "databases" not in config["notion"]["mount"]:
+                config["notion"]["mount"]["databases"] = []
+            
+            # Update the database configuration
             if config["notion"]["mount"]["databases"]:
                 config["notion"]["mount"]["databases"][0]["database_id"] = database_id
                 config["notion"]["mount"]["databases"][0]["target_folder"] = target_folder
@@ -255,9 +293,33 @@ NOTION_DATABASE_ID_POSTS={database_id}
                     "target_folder": target_folder,
                     "content_type": "post"
                 }]
-        
-        config_manager.save_config(config)
-        print_info("Updated config.yaml with database settings")
+            
+            config_manager.save_config(config)
+            print_info("Updated config.yaml with database settings")
+        except Exception as config_error:
+            print_info(f"Config.yaml update failed: {str(config_error)}")
+            print_info("Creating fallback configuration...")
+            
+            # Create a simple fallback config file
+            fallback_config = {
+                "notion": {
+                    "mount": {
+                        "databases": [{
+                            "database_id": database_id,
+                            "target_folder": target_folder,
+                            "content_type": "post"
+                        }]
+                    }
+                }
+            }
+            
+            try:
+                import yaml
+                with open("notion-hugo.config.yaml", "w", encoding="utf-8") as f:
+                    yaml.dump(fallback_config, f, default_flow_style=False, indent=2)
+                print_info("Created fallback notion-hugo.config.yaml")
+            except Exception as fallback_error:
+                raise Exception(f"Both primary and fallback config creation failed: {str(fallback_error)}")
         
         return {"success": True}
         
@@ -601,11 +663,15 @@ def setup(token: str, target_folder: str, interactive: bool, migrate_from: Optio
             if config_result.get("success"):
                 update_progress("Environment configuration")
             else:
+                error_msg = config_result.get("error", "Unknown configuration error")
+                print_error(f"Configuration setup failed: {error_msg}")
+                print_info("This may cause issues with the sync process")
                 update_progress("Environment configuration", False)
-                print_warning("Configuration setup had issues but continuing...")
+                # Don't exit - let the user know but continue
         except Exception as e:
             update_progress("Environment configuration", False)
-            print_warning(f"Configuration setup warning: {str(e)} - continuing...")
+            print_error(f"Configuration setup failed with exception: {str(e)}")
+            print_info("Continuing with setup, but manual configuration may be needed")
         
         # Step 4: GitHub repository and deployment setup
         if not skip_github:
