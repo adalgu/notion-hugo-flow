@@ -1,29 +1,26 @@
-name: Notion → Hugo → GitHub Pages (Optimized)
+name: Notion-Hugo Flow → GitHub Pages (Optimized)
 
 on:
+  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
+
   schedule:
-    - cron: '0 */2 * * *'  # Every 2 hours
+    - cron: '0 */2 * * *'  # Run every 2 hours
+  
   workflow_dispatch:
     inputs:
       sync_mode:
-        description: 'Sync mode'
+        description: 'Sync mode (incremental or full-sync)'
         required: false
         default: 'incremental'
         type: choice
         options:
         - incremental
         - full-sync
-      deploy_target:
-        description: 'Deploy target'
-        required: false
-        default: 'github-pages'
-        type: choice
-        options:
-        - github-pages
-        - vercel-preview
-        - both
+  
+  repository_dispatch:
+    types: [trigger-hugo-build]
 
 permissions:
   contents: read
@@ -31,172 +28,91 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: "deploy"
   cancel-in-progress: false
 
 env:
   HUGO_VERSION: 0.128.0
   PYTHON_VERSION: "3.10"
+  STATE_FILE: .notion-hugo-state.json
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      deploy_vercel: ${{ steps.target.outputs.deploy_vercel }}
-    
     steps:
-      - name: 📥 Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      - name: 🔍 Detect environment
-        id: target
+      - name: Install Hugo
         run: |
-          echo "🔍 Detecting deployment configuration..."
-          
-          # Check if Vercel should be deployed
-          if [[ "${{ github.event.inputs.deploy_target }}" == "vercel-preview" ]] || \
-             [[ "${{ github.event.inputs.deploy_target }}" == "both" ]]; then
-            echo "deploy_vercel=true" >> $GITHUB_OUTPUT
-            echo "▲ Vercel deployment enabled"
-          else
-            echo "deploy_vercel=false" >> $GITHUB_OUTPUT
-          fi
-          
-          # Detect sync mode
-          SYNC_MODE="${{ github.event.inputs.sync_mode }}"
-          if [[ -z "$SYNC_MODE" ]]; then
-            if [[ "${{ github.event_name }}" == "schedule" ]]; then
-              SYNC_MODE="full-sync"
-              echo "⏰ Scheduled run - using full sync"
-            else
-              SYNC_MODE="incremental"
-              echo "⚡ Manual/push trigger - using incremental sync"
-            fi
-          fi
-          echo "sync_mode=$SYNC_MODE" >> $GITHUB_OUTPUT
-
-      - name: 💾 Cache Hugo resources
-        uses: actions/cache@v4
-        with:
-          path: |
-            resources/_gen
-            .hugo_build.lock
-          key: ${{ runner.os }}-hugo-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-hugo-
-
-      - name: 💾 Cache Python dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: 💾 Restore Notion sync state
-        uses: actions/cache@v4
-        with:
-          path: .notion-hugo-state.json
-          key: notion-state-${{ github.sha }}
-          restore-keys: |
-            notion-state-
-
-      - name: 🔧 Setup Hugo
-        run: |
-          wget -O ${{ runner.temp }}/hugo.deb \
-            https://github.com/gohugoio/hugo/releases/download/v${{ env.HUGO_VERSION }}/hugo_extended_${{ env.HUGO_VERSION }}_linux-amd64.deb
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${{ env.HUGO_VERSION }}/hugo_extended_${{ env.HUGO_VERSION }}_linux-amd64.deb
           sudo dpkg -i ${{ runner.temp }}/hugo.deb
-          hugo version
 
-      - name: 🐍 Setup Python
+      - name: Install Dart Sass
+        run: sudo snap install dart-sass
+
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
 
-      - name: 📦 Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r dev/requirements.txt
+          pip install notion-client python-dotenv pyyaml fs tabulate
 
-      - name: 🔄 Sync from Notion
-        env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DATABASE_ID_POSTS: ${{ secrets.NOTION_DATABASE_ID_POSTS }}
-        run: |
-          echo "🔄 Starting Notion sync (${{ steps.target.outputs.sync_mode }})..."
-          python app.py sync --${{ steps.target.outputs.sync_mode == 'full-sync' && 'full' || 'incremental' }}
-          
-          # Verify content generation
-          if [ -d "content/posts" ]; then
-            POST_COUNT=$(find content/posts -name "*.md" -type f | wc -l)
-            echo "✅ Generated $POST_COUNT posts"
-          else
-            echo "❌ No content generated"
-            exit 1
-          fi
-
-      - name: 🏗️ Build with Hugo
-        env:
-          HUGO_ENVIRONMENT: production
-        run: |
-          # Auto-detect base URL for GitHub Pages
-          if [[ "${{ github.repository }}" == *".github.io" ]]; then
-            BASE_URL="https://${{ github.repository_owner }}.github.io"
-          else
-            REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
-            BASE_URL="https://${{ github.repository_owner }}.github.io/${REPO_NAME}"
-          fi
-          
-          echo "🔗 Building with base URL: $BASE_URL"
-          hugo --minify --baseURL "$BASE_URL/"
-          
-          # Validate build
-          if [ ! -f "public/index.html" ]; then
-            echo "❌ Build failed - no index.html"
-            exit 1
-          fi
-          
-          echo "✅ Hugo build successful"
-
-      - name: 📤 Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Restore Notion sync state
+        uses: actions/cache@v4
         with:
-          path: ./public
+          path: ${{ env.STATE_FILE }}
+          key: notion-state-${{ github.ref_name }}
+          restore-keys: |
+            notion-state-
 
-      - name: 💾 Save Notion sync state
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: .notion-hugo-state.json
-          key: notion-state-${{ github.sha }}
-
-  deploy-github:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: 🚀 Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  deploy-vercel:
-    if: needs.build.outputs.deploy_vercel == 'true'
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: ▲ Deploy to Vercel
-        if: env.VERCEL_TOKEN != ''
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - name: Determine sync mode
+        id: sync-mode
         run: |
-          npm i -g vercel
-          vercel --prod --token=$VERCEL_TOKEN --yes || echo "Vercel deployment skipped (no token)"
+          # Improved sync mode determination logic
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          if [[ -z "$COMMIT_MSG" ]]; then
+            COMMIT_MSG="$(git log -1 --pretty=%B)"
+          fi
+          REF_NAME="${{ github.ref_name }}"
+          EVENT_NAME="${{ github.event_name }}"
+          MANUAL_INPUT="${{ github.event.inputs.sync_mode }}"
+          
+          echo "Debug info:"
+          echo "- Commit message: '$COMMIT_MSG'"
+          echo "- Ref name: '$REF_NAME'"
+          echo "- Event name: '$EVENT_NAME'"
+          echo "- Manual input: '$MANUAL_INPUT'"
+          
+          # Priority-based mode determination
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && -n "$MANUAL_INPUT" ]]; then
+            # 1st priority: User-selected mode for manual execution
+            SYNC_MODE="$MANUAL_INPUT"
+            echo "📝 User selected mode: $SYNC_MODE"
+          elif [[ "$COMMIT_MSG" == *"[full-sync]"* ]] || \
+               [[ "$COMMIT_MSG" == *"[force-rebuild]"* ]]; then
+            # 2nd priority: Keywords in commit message
+            SYNC_MODE="full-sync"
+            echo "🏷️ Keyword-triggered full sync"
+          elif [[ "$REF_NAME" == *"full-sync"* ]]; then
+            # 3rd priority: Branch name includes full-sync
+            SYNC_MODE="full-sync"
+            echo "🌿 Branch-triggered full sync"
+          elif [[ "$EVENT_NAME" == "schedule" ]]; then
+            # 4th priority: Scheduled execution is full-sync (periodic sync)
+            SYNC_MODE="full-sync"
+            echo "⏰ Scheduled full sync"
+          else
+            # Default: incremental mode
+            SYNC_MODE="incremental"
+            echo "⚡ Default incremental sync"
+          fi
+          
+          echo "sync_mode=$SYNC_MODE" >> $GITHUB_OUTPUT
+          echo "🎯 Final sync mode: $SYNC_MODE"

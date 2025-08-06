@@ -1,6 +1,0 @@
-notion:
-  mount:
-    databases:
-    - content_type: post
-      database_id: 2477522e-eb2f-81f5-b0bf-d0ac48e60931
-      target_folder: posts

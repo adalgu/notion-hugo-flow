@@ -1,11 +1,11 @@
 #!/bin/bash
 # Quick setup script for GitHub Pages deployment
-# This script automates the entire setup process
+# This script automates the entire setup process for Notion-Hugo Flow
 
 set -e
 
-echo "🚀 Notion-Hugo Quick Setup for GitHub Pages"
-echo "==========================================="
+echo "🚀 Notion-Hugo Flow Quick Setup for GitHub Pages"
+echo "================================================"
 
 # Check if Python is installed
 if ! command -v python3 &> /dev/null; then
@@ -39,7 +39,7 @@ python3 app.py quickstart --token "$NOTION_TOKEN"
 # Git operations
 echo "📝 Preparing for GitHub deployment..."
 git add .
-git commit -m "Initial Notion-Hugo setup with GitHub Pages configuration" || true
+git commit -m "Initial Notion-Hugo Flow setup with GitHub Pages configuration" || true
 
 # Final instructions
 echo ""
@@ -65,4 +65,4 @@ else
     echo "   https://$USERNAME.github.io/$REPONAME"
 fi
 echo ""
-echo "🎉 Happy blogging!"
+echo "🎉 Happy blogging with Notion-Hugo Flow!"

@@ -1,4 +1,4 @@
-name: Notion → Hugo → GitHub Pages
+name: Notion-Hugo Flow → GitHub Pages
 
 on:
   # Runs on pushes targeting the default branch
@@ -6,7 +6,7 @@ on:
     branches: ["main"]
 
   schedule:
-    - cron: '0 */1 * * *'  # 매시간 실행
+    - cron: '0 */1 * * *'  # Run every hour
   
   workflow_dispatch:
     inputs:
@@ -75,7 +75,7 @@ jobs:
       - name: Determine sync mode
         id: sync-mode
         run: |
-          # 동기화 모드 결정 로직 개선
+          # Improved sync mode determination logic
           COMMIT_MSG="${{ github.event.head_commit.message }}"
           if [[ -z "$COMMIT_MSG" ]]; then
             COMMIT_MSG="$(git log -1 --pretty=%B)"
@@ -90,26 +90,26 @@ jobs:
           echo "- Event name: '$EVENT_NAME'"
           echo "- Manual input: '$MANUAL_INPUT'"
           
-          # 우선순위별 모드 결정
+          # Priority-based mode determination
           if [[ "$EVENT_NAME" == "workflow_dispatch" && -n "$MANUAL_INPUT" ]]; then
-            # 1순위: 수동 실행 시 사용자가 직접 선택한 모드
+            # 1st priority: User-selected mode for manual execution
             SYNC_MODE="$MANUAL_INPUT"
             echo "📝 User selected mode: $SYNC_MODE"
           elif [[ "$COMMIT_MSG" == *"[full-sync]"* ]] || \
                [[ "$COMMIT_MSG" == *"[force-rebuild]"* ]]; then
-            # 2순위: 커밋 메시지의 키워드
+            # 2nd priority: Keywords in commit message
             SYNC_MODE="full-sync"
             echo "🏷️ Keyword-triggered full sync"
           elif [[ "$REF_NAME" == *"full-sync"* ]]; then
-            # 3순위: 브랜치명에 full-sync 포함
+            # 3rd priority: Branch name includes full-sync
             SYNC_MODE="full-sync"
             echo "🌿 Branch-triggered full sync"
           elif [[ "$EVENT_NAME" == "schedule" ]]; then
-            # 4순위: 스케줄 실행은 full-sync (정기 동기화)
+            # 4th priority: Scheduled execution is full-sync (periodic sync)
             SYNC_MODE="full-sync"
             echo "⏰ Scheduled full sync"
           else
-            # 기본: incremental 모드
+            # Default: incremental mode
             SYNC_MODE="incremental"
             echo "⚡ Default incremental sync"
           fi

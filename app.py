@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Notion-Hugo Integration - Main Entry Point
+Notion-Hugo Flow - Main Entry Point
 
-This is the primary entry point for the Notion-Hugo blog system.
+This is the primary entry point for the Notion-Hugo Flow blog system.
 It provides a modern CLI interface with comprehensive setup capabilities.
 
 Quick Start:
@@ -70,7 +70,7 @@ try:
 
 except ImportError as e:
     # Fallback error handling when src imports fail
-    print(f"❌ Failed to import Notion-Hugo CLI: {str(e)}")
+    print(f"❌ Failed to import Notion-Hugo Flow CLI: {str(e)}")
     print("📦 Install dependencies first:")
     print("   pip install notion-client python-dotenv pyyaml click")
     print("   # or")

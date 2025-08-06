@@ -1,4 +1,4 @@
-# Unified Configuration for Notion-Hugo Blog
+# Unified Configuration for Notion-Hugo Flow Blog
 # This file consolidates all configuration settings into a single, clean YAML structure
 # Environment variables can override any setting using the pattern: SECTION_SUBSECTION_KEY
 # Example: NOTION_API_TOKEN overrides notion.api.token
