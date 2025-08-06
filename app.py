@@ -19,22 +19,22 @@ Commands:
 Examples:
     # Complete setup from scratch
     python app.py setup --token YOUR_NOTION_TOKEN
-    
+
     # Setup without GitHub (manual deployment)
     python app.py setup --token YOUR_NOTION_TOKEN --skip-github
-    
+
     # Interactive setup with choices
     python app.py setup --token YOUR_NOTION_TOKEN --interactive
-    
+
     # Just sync content from Notion
     python app.py sync
-    
+
     # Build Hugo site
     python app.py build --serve
-    
+
     # Full deployment pipeline
     python app.py deploy
-    
+
     # Check current status
     python app.py status
 """
@@ -52,7 +52,7 @@ if str(src_path) not in sys.path:
 try:
     # Import the modern CLI
     from src.app import cli, print_error, print_info
-    
+
     if __name__ == "__main__":
         try:
             cli()

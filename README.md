@@ -79,7 +79,7 @@ python app.py quickstart --token YOUR_NOTION_TOKEN
 
 # 4. Add GitHub Secret
 # Go to: Settings → Secrets → Actions
-# Add: NOTION_TOKEN = your_token
+# Add: NOTION_TOKEN = your_actual_token_here
 
 # 5. Push
 git push origin main
