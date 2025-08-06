@@ -51,6 +51,8 @@ from .cli_utils import (
     print_warning,
     ask_yes_no,
 )
+from .smart_config import SmartConfigManager, ThemeManager
+from .config_validator import ConfigValidator, run_validation_check
 
 
 def run_enhanced_quick_setup(target_folder: str = "posts", skip_sample_posts: bool = False) -> Dict[str, Any]:
@@ -924,6 +926,48 @@ def setup(token: str, target_folder: str, interactive: bool, migrate_from: Optio
         sys.exit(1)
 
 
+3. Push to GitHub to trigger deployment")
+            print_info("  4. Your site will be live in ~5 minutes!")
+        else:
+            print_info("  1. Run: python app.py build --serve")
+            print_info("  2. Open http://localhost:1313")
+        
+        print_info("\n📝 Daily Workflow:")
+        print_info("  • Edit content in Notion")
+        print_info("  • Run: python app.py sync")
+        print_info("  • Changes auto-deploy to GitHub Pages!")
+        
+    except KeyboardInterrupt:
+        print_warning("\n🛑 Setup interrupted")
+        sys.exit(130)
+    except Exception as e:
+        print_error(f"Setup failed: {str(e)}")
+        sys.exit(1)
+
+
+def setup_vercel_preview():
+    """Setup Vercel for preview deployments"""
+    vercel_json = {
+        "buildCommand": "python app.py sync && hugo --minify",
+        "outputDirectory": "public",
+        "framework": None,
+        "installCommand": "pip install -r dev/requirements.txt && apt-get update && apt-get install -y hugo",
+        "env": {
+            "HUGO_VERSION": "0.128.0"
+        }
+    }
+    
+    vercel_path = Path("vercel.json")
+    if not vercel_path.exists():
+        import json
+        with open(vercel_path, 'w') as f:
+            json.dump(vercel_json, f, indent=2)
+        print_success("✅ Created vercel.json")
+        print_info("  Deploy with: vercel --prod")
+    else:
+        print_info("  vercel.json already exists")
+
+
 @cli.command()
 @click.option(
     "--incremental/--full",
@@ -1335,7 +1379,12 @@ def status() -> None:
     is_flag=True,
     help="Attempt to fix common configuration issues"
 )
-def validate(fix: bool) -> None:
+@click.option(
+    "--github",
+    is_flag=True,
+    help="Validate GitHub Pages specific setup"
+)
+def validate(fix: bool, github: bool) -> None:
     """
     Validate current Notion-Hugo configuration.
     
@@ -1345,49 +1394,43 @@ def validate(fix: bool) -> None:
     Examples:
         python app.py validate                # Check configuration
         python app.py validate --fix          # Fix common issues
+        python app.py validate --github       # Check GitHub Pages setup
     """
     print_header("Configuration Validation")
     
     try:
-        # Run built-in validation
-        result = run_validation()
-        
-        if result.get("success"):
-            print_success("Configuration validation passed!")
+        # Use enhanced validation if GitHub flag is set
+        if github:
+            print_info("🔍 Running GitHub Pages specific validation...")
+            config_manager = SmartConfigManager()
+            valid, issues = config_manager.validate_github_pages_setup()
+            
+            if valid:
+                print_success("✅ GitHub Pages setup is valid!")
+                print_info(f"  Site URL: {config_manager.get_base_url('github')}")
+            else:
+                print_error("❌ GitHub Pages setup has issues:")
+                for issue in issues:
+                    print_warning(f"  • {issue}")
+                    
+                if fix:
+                    print_info("\n🔧 Attempting to fix GitHub Pages setup...")
+                    if config_manager.setup_github_pages():
+                        print_success("✅ GitHub Pages setup completed!")
+                    else:
+                        print_error("❌ Could not complete GitHub Pages setup")
         else:
-            print_error("Configuration validation failed")
-            error_msg = result.get("error", "Unknown error")
-            print_info(f"Error: {error_msg}")
-        
-        # Run detailed diagnosis
-        print_info("Running detailed diagnosis...")
-        diagnosis = diagnose_configuration()
-        
-        if diagnosis.get("ready_to_deploy"):
-            print_success("System is ready for deployment!")
-        else:
-            print_warning("System is not ready for deployment")
-            missing_items = diagnosis.get("missing_items", [])
-            if missing_items:
-                print_info("Missing or incorrect items:")
-                for item in missing_items:
-                    print_info(f"  - {item}")
-        
-        # Attempt fixes if requested
-        if fix and not diagnosis.get("ready_to_deploy"):
-            print_info("Attempting to fix common issues...")
+            # Use new comprehensive validator
+            is_valid = run_validation_check(auto_fix=fix)
             
-            # Create environment template if missing
-            if not os.path.exists(".env"):
-                print_info("Creating .env template file...")
-                app.config_manager.create_env_template()
-            
-            # Create default config if missing
-            if not os.path.exists(app.config_manager.config_path):
-                print_info("Creating default configuration file...")
-                app.config_manager.create_default_config_if_missing()
-            
-            print_success("Auto-fix completed. Please review and update the created files.")
+            if is_valid:
+                print_success("\n🎉 Your Notion-Hugo setup is ready!")
+                print_info("Run 'python app.py sync' to start syncing content")
+            else:
+                print_error("\n❌ Please fix the issues above before proceeding")
+                if not fix:
+                    print_info("Run 'python app.py validate --fix' to attempt auto-fixes")
+                sys.exit(1)
         
     except Exception as e:
         print_error(f"Validation failed with error: {str(e)}")
