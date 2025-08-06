@@ -1,55 +1,19 @@
-# Notion-Hugo 통합 설정 파일 (원스톱 설치로 자동 생성)
-# 환경변수 우선, YAML 폴백 방식으로 database_id를 처리합니다.
-
+deployment:
+  auto_deploy: true
+  environment: production
+  trigger: push
+filename:
+  date_format: '%Y-%m-%d'
+  format: date-title
+  korean_title: slug
 mount:
   databases:
-  # 환경변수 NOTION_DATABASE_ID_POSTS에서 database_id를 자동 로드
-  - target_folder: posts
-    # 아래 database_id는 환경변수가 없을 때만 사용 (보안상 권장하지 않음)
-    # database_id: 21d7522e-eb2f-8135-824b-fcabce8c2efa  # 환경변수 사용으로 주석 처리됨
-  
+  - database_id: 2477522e-eb2f-81b0-97b0-f8a0c7f81c1e
+    target_folder: posts
+  - database_id: 2477522e-eb2f-8100-9aaa-d08817999824
+    target_folder: posts
   manual: true
-
-# 파일명 생성 설정
-filename:
-  format: "date-title"
-  date_format: "%Y-%m-%d"
-  korean_title: "slug"
-
-# 고급 설정
-sync:
-  # 동기화 모드: "smart" (변경된 것만), "full" (전체)
-  mode: "smart"
-  # 배치 크기 (한 번에 처리할 페이지 수)
-  batch_size: 10
-  # 재시도 횟수
-  retry_count: 3
-
-# 콘텐츠 처리 설정
-content:
-  # 이미지 처리
-  image_optimization: true
-  # 코드 블록 하이라이팅
-  code_highlighting: true
-  # 수식 렌더링
-  math_rendering: true
-
-# 보안 및 배포 설정
 security:
-  # 환경변수 기반 설정 활성화
+  mask_sensitive_logs: true
+  token_validation: true
   use_environment_variables: true
-  # Git에서 제외할 파일들이 자동으로 .gitignore에 추가됨
-  
-deployment:
-  # 자동 배포 활성화
-  auto_deploy: true
-  # 배포 트리거: "push" (Git 푸시 시), "schedule" (정기적)
-  trigger: "push"
-  # 정기 동기화 (cron 형식)
-  schedule: "0 */2 * * *"  # 2시간마다
-
-# 생성 정보
-generated:
-  timestamp: "2025-06-25T23:28:30.723745"
-  database_id: "21d7522e-eb2f-8135-824b-fcabce8c2efa"
-  installer_version: "1.0.0"

@@ -463,11 +463,7 @@ class NotionSetup:
             "isPublished": {
                 "checkbox": True
             },
-            "expiryDate": {
-                "date": {
-                    "start": None  # 만료 날짜 없음
-                }
-            },
+            # expiryDate는 필요한 경우에만 설정하므로 여기서는 생략
             
             # 메타데이터 속성 (추천)
             "Description": {
