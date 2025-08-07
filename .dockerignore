@@ -10,7 +10,7 @@ CLAUDE.md
 # Cache and temporary files
 .channels_cache.json
 .users_cache.json
-.notion-hugo-state.json*
+src/config/.notion-hugo-state.json*
 data/error_temp/
 __pycache__/
 *.pyc

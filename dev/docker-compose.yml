@@ -8,7 +8,7 @@ services:
       - "1313:1313" # Hugo default port
     volumes:
       - ./:/app # Mount the entire project directory
-      - ./.notion-hugo-state.json:/app/.notion-hugo-state.json # Persist metadata state
+      - ./src/config/.notion-hugo-state.json:/app/src/config/.notion-hugo-state.json # Persist metadata state
     environment:
       - HUGO_ENVIRONMENT=development
       - HUGO_ENABLEGITINFO=true

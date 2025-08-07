@@ -17,8 +17,8 @@
 - [x] 배포 전략 단순화 방안 수립
 - [x] **폴더 구조 리팩토링 완료** ✨
   ```
-  ✅ 완료: blog/, src/, dev/ 명확한 분리
-  - blog/: Hugo 관련 파일 (config, themes, content 등)
+  ✅ 완료: {hugo_root}/, src/, dev/ 명확한 분리
+- {hugo_root}/: Hugo 관련 파일 (config, themes, content 등)
   - src/: Python 소스코드 (app.py, utils 등)
   - dev/: 개발 관련 파일 (docs, scripts, requirements 등)
   ```
@@ -125,7 +125,7 @@
 
 ### 이번 주 (우선순위 1) 
 1. [x] ~~폴더 구조 리팩토링 시작~~ ✅ **완료**
-   - [x] ~~`blog/` 폴더 생성 및 Hugo 파일들 이동~~ ✅
+   - [x] ~~`{hugo_root}/` 폴더 생성 및 Hugo 파일들 이동~~ ✅
    - [x] ~~`dev/` 폴더 생성 및 개발 파일들 정리~~ ✅
 
 2. [x] ~~단일 진입점 구현~~ ✅ **완료**

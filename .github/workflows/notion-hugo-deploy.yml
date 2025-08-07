@@ -34,7 +34,7 @@ concurrency:
 env:
   HUGO_VERSION: 0.128.0
   PYTHON_VERSION: "3.10"
-  STATE_FILE: .notion-hugo-state.json
+  STATE_FILE: src/config/.notion-hugo-state.json
 
 jobs:
   build:

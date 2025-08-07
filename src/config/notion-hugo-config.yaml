@@ -8,7 +8,7 @@
 # =============================================================================
 notion:
   api:
-    # Notion API token (can be overridden by NOTION_API_TOKEN env var)
+    # Notion API token (can be overridden by NOTION_TOKEN env var)
     token: "${NOTION_TOKEN:-}"
     # API request timeout in seconds
     timeout: 30
@@ -28,6 +28,7 @@ notion:
     # Manual database configuration (used when auto_discovery is false)
     databases:
       # Posts database configuration
+      # Note: Database ID is the same as the Page ID of the page containing the database block
       - database_id: "${NOTION_DATABASE_ID_POSTS:-}"
         target_folder: "posts"
         # Content type for this database
@@ -42,6 +43,8 @@ notion:
           
     # Individual pages to sync (optional)
     pages:
+      # About page configuration
+      # Note: Page ID is the unique identifier for any Notion page
       - page_id: "${NOTION_PAGE_ID_ABOUT:-}"
         target_file: "pages/about.md"
 
@@ -67,6 +70,19 @@ notion:
 # HUGO SITE CONFIGURATION
 # =============================================================================
 hugo:
+  # Hugo project directory structure
+  directories:
+    # Root directory for Hugo project (relative to workspace root)
+    root: "blog"
+    # Content directory (relative to Hugo root)
+    content: "content"
+    # Public/output directory (relative to Hugo root)
+    public: "public"
+    # Static files directory (relative to Hugo root)
+    static: "static"
+    # Themes directory (relative to Hugo root)
+    themes: "themes"
+    
   # Basic site settings
   site:
     base_url: "https://gunn.kim"

@@ -50,6 +50,6 @@ deployment:
 
 # Generation information
 generated:
-  timestamp: "2025-06-25T23:28:30.723745"
-  database_id: "21d7522e-eb2f-8135-824b-fcabce8c2efa"
+  timestamp: "2025-01-27T00:00:00.000000"
+  database_id: "your-notion-database-id-here"
   installer_version: "1.0.0"
