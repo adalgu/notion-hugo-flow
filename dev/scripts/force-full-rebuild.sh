@@ -10,14 +10,14 @@ echo "1. 현재 상태 백업 중..."
 BACKUP_DIR="data/full_rebuild_backup/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
-if [ -f ".notion-hugo-state.json" ]; then
-    cp ".notion-hugo-state.json" "$BACKUP_DIR/"
+if [ -f "src/config/.notion-hugo-state.json" ]; then
+    cp "src/config/.notion-hugo-state.json" "$BACKUP_DIR/"
     echo "상태 파일 백업됨: $BACKUP_DIR/.notion-hugo-state.json"
 fi
 
 # 2. 캐시 및 상태 파일 완전 삭제
 echo "2. 캐시 및 상태 파일 삭제 중..."
-rm -f .notion-hugo-state.json
+rm -f src/config/.notion-hugo-state.json
 echo "상태 파일 삭제됨"
 
 # 3. 임시 파일들 정리
@@ -49,7 +49,7 @@ if [ $RESULT -eq 0 ]; then
     echo ""
     echo "=== 재빌드 결과 요약 ==="
     echo "총 포스트 수: $(find content/posts -name "*.md" | wc -l)"
-    echo "상태 파일 생성됨: $([ -f ".notion-hugo-state.json" ] && echo "Yes" || echo "No")"
+    echo "상태 파일 생성됨: $([ -f "src/config/.notion-hugo-state.json" ] && echo "Yes" || echo "No")"
     
     # Hugo 빌드 테스트
     echo ""

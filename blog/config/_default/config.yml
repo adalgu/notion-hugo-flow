@@ -1,5 +1,7 @@
-baseURL: "https://gunn.kim"
-title: Exobrain
+# baseURL will be set by Hugo automatically for local development
+# For production, set HUGO_BASEURL environment variable or use --baseURL flag
+baseURL: ""
+title: "My Blog"
 paginate.pagerSize: 5
 theme: PaperMod
 mainSections: ["posts"]
@@ -13,16 +15,17 @@ buildDrafts: false
 buildFuture: false
 buildExpired: false
 
+# Temporarily disable minify to fix JSON parsing errors
 minify:
-  disableXML: false
-  minifyOutput: true
+  disableXML: true
+  minifyOutput: false
 
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
-  title: Exobrain
-  description: "Exobrain in the age of AI"
+  title: "My Blog"
+  description: "A blog powered by Notion and Hugo"
   keywords: [Blog, Portfolio, PaperMod]
-  author: Gunn Kim
+  author: "Blog Author"
   # author: ["Me", "You"] # multiple authors
   images: ["<link or path of image for opengraph, twitter-cards>"]
   DateFormat: "January 2, 2006"
@@ -94,7 +97,7 @@ params:
 
   analytics:
     google:
-      SiteVerificationTag: "G-BQ6CZ7HMQK"
+      SiteVerificationTag: ""
     # bing:
     #   SiteVerificationTag: "XYZabc"
     # yandex:
@@ -110,17 +113,18 @@ params:
   #   Text: "Suggest Changes" # edit text
   #   appendFilePath: true # to append file path to Edit link
 
+# Temporarily disable search to fix JSON parsing errors
   # for search
   # https://fusejs.io/api/options.html
-  fuseOpts:
-    isCaseSensitive: false
-    shouldSort: true
-    location: 0
-    distance: 1000
-    threshold: 0.4
-    minMatchCharLength: 0
-    limit: 10 # refer: https://www.fusejs.io/api/methods.html#search
-    keys: ["title", "permalink", "summary", "content"]
+  # fuseOpts:
+  #   isCaseSensitive: false
+  #   shouldSort: true
+  #   location: 0
+  #   distance: 1000
+  #   threshold: 0.4
+  #   minMatchCharLength: 0
+  #   limit: 10 # refer: https://www.fusejs.io/api/methods.html#search
+  #   keys: ["title", "permalink", "summary", "content"]
 menu:
   main:
     # - identifier: posts

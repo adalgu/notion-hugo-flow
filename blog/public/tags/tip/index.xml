@@ -1,1 +1,24 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Tip on Exobrain</title><link>http://localhost:1313/tags/tip/</link><description>Recent content in Tip on Exobrain</description><image><title>Exobrain</title><url>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url><link>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link></image><generator>Hugo -- 0.140.0</generator><language>en</language><lastBuildDate>Fri, 04 Apr 2025 12:26:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/tags/tip/index.xml" rel="self" type="application/rss+xml"/><item><title>구글 계정 전환 꿀팁! 효율적인 맞춤형 바로가기 만들기</title><link>http://localhost:1313/posts/custom-google-service-shortcuts-guide/</link><pubDate>Wed, 06 Mar 2024 00:00:00 +0000</pubDate><guid>http://localhost:1313/posts/custom-google-service-shortcuts-guide/</guid><description>다양한 구글 서비스에 빠르게 접근할 수 있는 맞춤형 인터넷 바로가기 생성 방법을 소개합니다.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Tip on My Blog</title>
+    <link>//localhost:1313/tags/tip/</link>
+    <description>Recent content in Tip on My Blog</description>
+    <image>
+      <title>My Blog</title>
+      <url>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
+      <link>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
+    </image>
+    <generator>Hugo -- 0.140.0</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 04 Apr 2025 12:26:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/tags/tip/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>구글 계정 전환 꿀팁! 효율적인 맞춤형 바로가기 만들기</title>
+      <link>//localhost:1313/posts/custom-google-service-shortcuts-guide/</link>
+      <pubDate>Wed, 06 Mar 2024 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/custom-google-service-shortcuts-guide/</guid>
+      <description>다양한 구글 서비스에 빠르게 접근할 수 있는 맞춤형 인터넷 바로가기 생성 방법을 소개합니다.</description>
+    </item>
+  </channel>
+</rss>

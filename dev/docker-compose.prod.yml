@@ -12,7 +12,7 @@ services:
       - HUGO_ENVIRONMENT=production
     volumes:
       - ./public:/app/public
-      - ./.notion-hugo-state.json:/app/.notion-hugo-state.json
+      - ./src/config/.notion-hugo-state.json:/app/src/config/.notion-hugo-state.json
     command: ["--full-sync", "--no-build"]
     
   hugo-server:

@@ -1,6 +1,29 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Error on Exobrain</title><link>http://localhost:1313/tags/error/</link><description>Recent content in Error on Exobrain</description><image><title>Exobrain</title><url>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url><link>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link></image><generator>Hugo -- 0.140.0</generator><language>en</language><lastBuildDate>Fri, 16 May 2025 01:15:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/tags/error/index.xml" rel="self" type="application/rss+xml"/><item><title>[파이썬] 코딩, 나를 키운 건 팔할이 오타다</title><link>http://localhost:1313/posts/python-coding-typos-learning/</link><pubDate>Mon, 02 Mar 2020 10:26:00 +0900</pubDate><guid>http://localhost:1313/posts/python-coding-typos-learning/</guid><description>&lt;p>요즘 데이터 분석에 한창이다. 파이썬에 하둡을 물려서 SQL 쿼리를 날리고, 이를 판다스로 불러와 분석하거나 간단한 것은 엑셀 피벗테이블으로 돌려보고 있다.&lt;/p>
-&lt;p>그러다 보니 수없이 많은 에러 메시지를 접하게 된다. 특히, 간단한 쿼리문을 날리는 것에도 에러가 나서 좌절을 경험하곤 했다. 그런데, 조금 겪고 보니 결국은 간단한 나의 실수가 만든 일이었다.&lt;/p>
-&lt;p>에러도 데이터가 좀 쌓이다 보니 일정한 패턴이 있는데, 그 중요한 유형이 바로 &amp;lt;오타&amp;gt;였다. 그러면서 문득 미당 서정주의 유명한 시구절이 생각났다.&lt;/p>
-&lt;blockquote>
-&lt;p>&amp;ldquo;스물 세 해 동안 나를 키운 건 팔 할이 바람이다.&amp;rdquo;&lt;br>
-&lt;em>미당 서정주의 &amp;lt;자화상&amp;gt; 중&lt;/em>&lt;/p></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Error on My Blog</title>
+    <link>//localhost:1313/tags/error/</link>
+    <description>Recent content in Error on My Blog</description>
+    <image>
+      <title>My Blog</title>
+      <url>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
+      <link>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
+    </image>
+    <generator>Hugo -- 0.140.0</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 16 May 2025 01:15:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/tags/error/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>[파이썬] 코딩, 나를 키운 건 팔할이 오타다</title>
+      <link>//localhost:1313/posts/python-coding-typos-learning/</link>
+      <pubDate>Mon, 02 Mar 2020 10:26:00 +0900</pubDate>
+      <guid>//localhost:1313/posts/python-coding-typos-learning/</guid>
+      <description>&lt;p&gt;요즘 데이터 분석에 한창이다. 파이썬에 하둡을 물려서 SQL 쿼리를 날리고, 이를 판다스로 불러와 분석하거나 간단한 것은 엑셀 피벗테이블으로 돌려보고 있다.&lt;/p&gt;
+&lt;p&gt;그러다 보니 수없이 많은 에러 메시지를 접하게 된다. 특히, 간단한 쿼리문을 날리는 것에도 에러가 나서 좌절을 경험하곤 했다. 그런데, 조금 겪고 보니 결국은 간단한 나의 실수가 만든 일이었다.&lt;/p&gt;
+&lt;p&gt;에러도 데이터가 좀 쌓이다 보니 일정한 패턴이 있는데, 그 중요한 유형이 바로 &amp;lt;오타&amp;gt;였다. 그러면서 문득 미당 서정주의 유명한 시구절이 생각났다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&amp;ldquo;스물 세 해 동안 나를 키운 건 팔 할이 바람이다.&amp;rdquo;&lt;br&gt;
+&lt;em&gt;미당 서정주의 &amp;lt;자화상&amp;gt; 중&lt;/em&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

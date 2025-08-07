@@ -40,9 +40,9 @@ fi
 
 # 3. 상태 파일 초기화 (선택적)
 echo "3. 상태 파일 확인..."
-if [ -f ".notion-hugo-state.json" ]; then
+if [ -f "src/config/.notion-hugo-state.json" ]; then
     echo "현재 상태 파일이 존재합니다. 필요시 수동으로 삭제하세요."
-    echo "삭제 명령: rm .notion-hugo-state.json"
+    echo "삭제 명령: rm src/config/.notion-hugo-state.json"
 fi
 
 echo "=== 레거시 파일 정리 완료 ==="

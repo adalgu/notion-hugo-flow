@@ -1,7 +1,387 @@
-<!doctype html><html lang=en dir=auto><head><meta name=generator content="Hugo 0.140.0"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Exobrain</title>
-<meta name=keywords content="Blog,Portfolio,PaperMod"><meta name=description content="Exobrain in the age of AI"><meta name=author content="Gunn Kim"><link rel=canonical href=http://localhost:1313/><meta name=google-site-verification content="G-BQ6CZ7HMQK"><link crossorigin=anonymous href=/assets/css/stylesheet.css rel="preload stylesheet" as=style><link rel=icon href=http://localhost:1313/%3Clink%20/%20abs%20url%3E><link rel=icon type=image/png sizes=16x16 href=http://localhost:1313/%3Clink%20/%20abs%20url%3E><link rel=icon type=image/png sizes=32x32 href=http://localhost:1313/%3Clink%20/%20abs%20url%3E><link rel=apple-touch-icon href=http://localhost:1313/%3Clink%20/%20abs%20url%3E><link rel=mask-icon href=http://localhost:1313/%3Clink%20/%20abs%20url%3E><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=http://localhost:1313/index.xml><link rel=alternate hreflang=en href=http://localhost:1313/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><script>(function(){const e=window.location.pathname;if(e.startsWith("/post/")&&!e.startsWith("/posts/")){const t=e.replace("/post/","/posts/"),n=window.location.origin+t+window.location.search+window.location.hash;window.location.replace(n)}(e==="/archives"||e==="/archives/")&&window.location.replace(window.location.origin+"/posts/")})()</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-BQ6CZ7HMQK"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-BQ6CZ7HMQK")</script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3695098602071408" crossorigin=anonymous></script><meta property="og:url" content="http://localhost:1313/"><meta property="og:site_name" content="Exobrain"><meta property="og:title" content="Exobrain"><meta property="og:description" content="Exobrain in the age of AI"><meta property="og:locale" content="en"><meta property="og:type" content="website"><meta property="og:image" content="http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E"><meta name=twitter:title content="Exobrain"><meta name=twitter:description content="Exobrain in the age of AI"><script type=application/ld+json>{"@context":"https://schema.org","@type":"Organization","name":"Exobrain","url":"http://localhost:1313/","description":"Exobrain in the age of AI","logo":"http://localhost:1313/%3Clink%20/%20abs%20url%3E","sameAs":[]}</script></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=http://localhost:1313/ accesskey=h title="Home (Alt + H)"><img src=http://localhost:1313/apple-touch-icon.png alt aria-label=logo height=35>Home</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=http://localhost:1313/posts/ title=posts><span>posts</span></a></li><li><a href=http://localhost:1313/tags/ title=tags><span>tags</span></a></li></ul></nav></header><main class=main><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>랭그래프 vs. 랭체인 : LLM 개발 프레임워크의 진화</h2></header><div class=entry-content><p>대규모 언어 모델(LLM) 기반 애플리케이션 개발이 급증하면서 랭체인(LangChain)과 랭그래프(LangGraph)가 주목받고 있습니다. 이 글에서는 두 프레임워크의 특징, 차이점, 그리고 실제 적용 사례를 살펴봅니다. AutoGPT와의 유사성을 통해 각 프레임워크를 이해하고, 나스닥 지수 분석 및 포트폴리오 최적화 예제를 통해 LangGraph의 실용성을 확인해보세요.</p></div><footer class=entry-footer><span title='2024-07-03 00:00:00 +0000 UTC'>July 3, 2024</span>&nbsp;·&nbsp;9 min&nbsp;·&nbsp;1785 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to 랭그래프 vs. 랭체인 : LLM 개발 프레임워크의 진화" href=http://localhost:1313/posts/langgraph-vs-langchain-evolution-of-llm-development-frameworks/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>파이썬으로 Active ETF 종목 변동 분석하기</h2></header><div class=entry-content><p>이 포스트에서는 파이썬을 사용하여 Active ETF의 종목 변동을 분석하는 방법을 소개합니다. 타임폴리오 자산운용의 ‘타임폴리오 코리아 플러스배당액티브 ETF’를 예시로 데이터 수집, 분석, 시각화를 통해 매니저의 투자 전략을 파악하는 방법을 배워보세요.</p></div><footer class=entry-footer><span title='2024-06-24 00:00:00 +0000 UTC'>June 24, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;845 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to 파이썬으로 Active ETF 종목 변동 분석하기" href=http://localhost:1313/posts/analyzing-active-etf-with-python/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>ETF는 수수료를 어떻게 떼갈까? 매일? 연말에 한번에? 초보 투자자를 위한 쉽게 이해하는 가이드</h2></header><div class=entry-content><p>ETF 투자는 다양한 자산에 분산 투자할 수 있는 좋은 방법이지만, ETF 선택 시 수수료 구조를 이해하는 것이 중요합니다. 이번 글에서는 대표적인 한국의 ETF 세 개를 예시로 들어, ETF 수수료가 어떻게 차감되는지 쉽게 설명합니다. 일일 차감 방식과 연간 보수율의 차이를 이해하고, 투자에 도움이 되는 정보를 얻어보세요.</p></div><footer class=entry-footer><span title='2024-06-13 00:00:00 +0000 UTC'>June 13, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;353 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to ETF는 수수료를 어떻게 떼갈까? 매일? 연말에 한번에? 초보 투자자를 위한 쉽게 이해하는 가이드" href=http://localhost:1313/posts/etf-fees-daily-or-annually/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>LangGraph 사용법: 멀티 에이전트로 S&amp;P 500 데이터 시각화하기</h2></header><div class=entry-content><p>LangChain의 새로운 라이브러리 LangGraph를 소개합니다. LangGraph를 사용하여 멀티 에이전트 콜라보레이션을 구현하고 S&amp;P 500 지수 데이터를 검색하고 시각화하는 방법을 알아보세요.</p></div><footer class=entry-footer><span title='2024-06-03 00:00:00 +0000 UTC'>June 3, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;779 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to LangGraph 사용법: 멀티 에이전트로 S&P 500 데이터 시각화하기" href=http://localhost:1313/posts/langchain-langgraph-multi-agent-collaboration/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>챗GPT 파인튜닝 기초: gpt-3.5-turbo 모델 사례 분석</h2></header><div class=entry-content><p>이 글에서는 인공지능의 핵심 개념 중 하나인 ‘파인튜닝’에 대해 쉽게 이해할 수 있도록 gpt-3.5-turbo 모델을 사례로 들어 설명합니다. 파인튜닝의 정의부터 시작하여, 실제 모델이 어떻게 특정 데이터셋에 맞춰 조정되어 성능이 향상되는지, 그리고 이 과정이 어떻게 여러분의 학습 방법에 영감을 줄 수 있는지에 대해 자세히 알아봅니다.</p></div><footer class=entry-footer><span title='2024-03-15 00:00:00 +0000 UTC'>March 15, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;369 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to 챗GPT 파인튜닝 기초: gpt-3.5-turbo 모델 사례 분석" href=http://localhost:1313/posts/ai-fine-tuning-gpt-3.5-turbo-case-study/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>동적 Few-shot 프롬프트를 이용한 텍스트 교정의 일관성 유지</h2></header><div class=entry-content><p>본 포스트에서는 대량의 텍스트를 처리할 때 각 청크별 일관성을 유지하는 도전적인 과제를 해결하기 위한 신기술, 동적 Few-shot 프롬프트 방식을 소개합니다. 이 방법은 최근 처리된 교정 사례를 프롬프트로 활용하여 모델이 새로운 텍스트 청크를 일관된 스타일과 톤으로 교정하도록 유도합니다. 구체적인 구현 방안과 예시 코드를 통해, 독자들이 이 기술을 이해하고 자신의 프로젝트에 적용할 수 있도록 안내합니다.</p></div><footer class=entry-footer><span title='2024-03-08 00:00:00 +0000 UTC'>March 8, 2024</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;626 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to 동적 Few-shot 프롬프트를 이용한 텍스트 교정의 일관성 유지" href=http://localhost:1313/posts/dynamic-few-shot-prompting-for-text-consistency/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>구글 계정 전환 꿀팁! 효율적인 맞춤형 바로가기 만들기</h2></header><div class=entry-content><p>다양한 구글 서비스에 빠르게 접근할 수 있는 맞춤형 인터넷 바로가기 생성 방법을 소개합니다.</p></div><footer class=entry-footer><span title='2024-03-06 00:00:00 +0000 UTC'>March 6, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;764 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to 구글 계정 전환 꿀팁! 효율적인 맞춤형 바로가기 만들기" href=http://localhost:1313/posts/custom-google-service-shortcuts-guide/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>MacOS에서 Streamlit 애플리케이션을 효율적으로 관리하는 방법</h2></header><div class=entry-content><p>이 블로그 포스트에서는 MacOS 환경에서 Streamlit 애플리케이션을 지속적으로 실행하고 관리하는 두 가지 주요 방법을 소개합니다. nohup을 사용한 백그라운드 실행과 tmux를 활용한 세션 관리 방법을 탐색하며, 실행 상황 모니터링과 프로세스 종료 방법에 대해서도 논의합니다. 개발자가 자신의 Streamlit 애플리케이션을 더 효과적으로 관리할 수 있도록 도와주는 이 글은 필수 읽을 거리입니다.</p></div><footer class=entry-footer><span title='2024-02-23 00:00:00 +0000 UTC'>February 23, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;723 words&nbsp;·&nbsp;**Gunn Kim**</footer><a class=entry-link aria-label="post link to MacOS에서 Streamlit 애플리케이션을 효율적으로 관리하는 방법" href=http://localhost:1313/posts/managing-streamlit-applications-on-macos/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>[ElephantSQL] PostgreSQL과 Python을 연동하는 방법: 기초부터 코드 예제까지</h2></header><div class=entry-content><p>이 글은 Streamlit 프레임워크를 활용해 파이썬으로 개발된 AI 기능이 탑재된 애플리케이션의 로그 데이터를 관리하고 분석하기 위한 데이터베이스 통합의 중요성에 초점을 맞추고 있다. MongoDB와 PostgreSQL 사이의 선택 고민을 탐구하며, 강화학습에 적합한 구조화된 데이터 축적을 위해 PostgreSQL을 선택한 과정을 소개한다. ElephantSQL을 통해 AWS 상에서 서비스로 제공되는 PostgreSQL의 클라우드 기능을 강조하며, psycopg2 라이브러리를 사용해 PostgreSQL 데이터베이스에 연결하고 기본 데이터베이스 작업을 수행하는 방법을 코드 스니펫과 함께 설명한다.</p></div><footer class=entry-footer><span title='2024-02-22 00:00:00 +0000 UTC'>February 22, 2024</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;953 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to [ElephantSQL] PostgreSQL과 Python을 연동하는 방법: 기초부터 코드 예제까지" href=http://localhost:1313/posts/postgres-vs-mongodb-python-genai-app/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>서론-본론-결론이 아니다. 기승전결이다.</h2></header><div class=entry-content><p>서론-본론-결론은 공식적인 글쓰기 구조지만 재미있는 글을 쓰고 싶다면 기승전결 구조를 인식해야 합니다. 이 글은 박종인의 ‘기자의 글쓰기’에서 발취한 항리한 작문 구조에 대한 통찼력 있는 통찼을 제공합니다. 리듬 있는 글쓰기의 부당탈탈한 매력을 발견해 보세요.</p></div><footer class=entry-footer><span title='2024-02-16 07:17:00 +0000 +0000'>February 16, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;833 words&nbsp;·&nbsp;Gunn Kim</footer><a class=entry-link aria-label="post link to 서론-본론-결론이 아니다. 기승전결이다." href=http://localhost:1313/posts/narrative-structure-kisungjeonggyeol-not-introduction-body-conclusion/></a></article><footer class=page-footer><nav class=pagination><a class=prev href=http://localhost:1313/>«&nbsp;Prev&nbsp;
-</a><a class=next href=http://localhost:1313/page/3/>Next&nbsp;&nbsp;»</a></nav></footer></main><footer class=footer><span>&copy; 2025 <a href=http://localhost:1313/>Exobrain</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head>
+	<meta name="generator" content="Hugo 0.140.0"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>My Blog</title>
+<meta name="keywords" content="Blog, Portfolio, PaperMod">
+<meta name="description" content="A blog powered by Notion and Hugo">
+<meta name="author" content="Blog Author">
+<link rel="canonical" href="//localhost:1313/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.css" rel="preload stylesheet" as="style">
+<link rel="icon" href="//localhost:1313/%3Clink%20/%20abs%20url%3E">
+<link rel="icon" type="image/png" sizes="16x16" href="//localhost:1313/%3Clink%20/%20abs%20url%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="//localhost:1313/%3Clink%20/%20abs%20url%3E">
+<link rel="apple-touch-icon" href="//localhost:1313/%3Clink%20/%20abs%20url%3E">
+<link rel="mask-icon" href="//localhost:1313/%3Clink%20/%20abs%20url%3E">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="//localhost:1313/index.xml">
+<link rel="alternate" hreflang="en" href="//localhost:1313/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+
+(function() {
+    const currentPath = window.location.pathname;
+    
+    
+    if (currentPath.startsWith('/post/') && !currentPath.startsWith('/posts/')) {
+        const newPath = currentPath.replace('/post/', '/posts/');
+        const newUrl = window.location.origin + newPath + window.location.search + window.location.hash;
+        
+        
+        window.location.replace(newUrl);
+    }
+    
+    
+    if (currentPath === '/archives' || currentPath === '/archives/') {
+        window.location.replace(window.location.origin + '/posts/');
+    }
+})();
+</script>
+
+
+
+<script
+  async
+  src="https://www.googletagmanager.com/gtag/js?id=G-BQ6CZ7HMQK"
+></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag("js", new Date());
+
+  gtag("config", "G-BQ6CZ7HMQK");
+</script>
+<script
+  async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3695098602071408"
+  crossorigin="anonymous"
+></script>
+<meta property="og:url" content="//localhost:1313/">
+  <meta property="og:site_name" content="My Blog">
+  <meta property="og:title" content="My Blog">
+  <meta property="og:description" content="A blog powered by Notion and Hugo">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="website">
+      <meta property="og:image" content="//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E">
+<meta name="twitter:title" content="My Blog">
+<meta name="twitter:description" content="A blog powered by Notion and Hugo">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "My Blog",
+  "url": "//localhost:1313/",
+  "description": "A blog powered by Notion and Hugo",
+  "logo": "//localhost:1313/%3Clink%20/%20abs%20url%3E",
+  "sameAs": [
+      
+  ]
+}
+</script>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="//localhost:1313/" accesskey="h" title="Home (Alt + H)">
+                <img src="//localhost:1313/apple-touch-icon.png" alt="" aria-label="logo"
+                    height="35">Home</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="//localhost:1313/posts/" title="posts">
+                    <span>posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="//localhost:1313/tags/" title="tags">
+                    <span>tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">랭그래프 vs. 랭체인 : LLM 개발 프레임워크의 진화
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>대규모 언어 모델(LLM) 기반 애플리케이션 개발이 급증하면서 랭체인(LangChain)과 랭그래프(LangGraph)가 주목받고 있습니다. 이 글에서는 두 프레임워크의 특징, 차이점, 그리고 실제 적용 사례를 살펴봅니다. AutoGPT와의 유사성을 통해 각 프레임워크를 이해하고, 나스닥 지수 분석 및 포트폴리오 최적화 예제를 통해 LangGraph의 실용성을 확인해보세요.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-07-03 00:00:00 +0000 UTC'>July 3, 2024</span>&nbsp;·&nbsp;9 min&nbsp;·&nbsp;1785 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to 랭그래프 vs. 랭체인 : LLM 개발 프레임워크의 진화" href="//localhost:1313/posts/langgraph-vs-langchain-evolution-of-llm-development-frameworks/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">파이썬으로 Active ETF 종목 변동 분석하기
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>이 포스트에서는 파이썬을 사용하여 Active ETF의 종목 변동을 분석하는 방법을 소개합니다. 타임폴리오 자산운용의 ‘타임폴리오 코리아 플러스배당액티브 ETF’를 예시로 데이터 수집, 분석, 시각화를 통해 매니저의 투자 전략을 파악하는 방법을 배워보세요.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-06-24 00:00:00 +0000 UTC'>June 24, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;845 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to 파이썬으로 Active ETF 종목 변동 분석하기" href="//localhost:1313/posts/analyzing-active-etf-with-python/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">ETF는 수수료를 어떻게 떼갈까? 매일? 연말에 한번에? 초보 투자자를 위한 쉽게 이해하는 가이드
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>ETF 투자는 다양한 자산에 분산 투자할 수 있는 좋은 방법이지만, ETF 선택 시 수수료 구조를 이해하는 것이 중요합니다. 이번 글에서는 대표적인 한국의 ETF 세 개를 예시로 들어, ETF 수수료가 어떻게 차감되는지 쉽게 설명합니다. 일일 차감 방식과 연간 보수율의 차이를 이해하고, 투자에 도움이 되는 정보를 얻어보세요.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-06-13 00:00:00 +0000 UTC'>June 13, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;353 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to ETF는 수수료를 어떻게 떼갈까? 매일? 연말에 한번에? 초보 투자자를 위한 쉽게 이해하는 가이드" href="//localhost:1313/posts/etf-fees-daily-or-annually/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">LangGraph 사용법: 멀티 에이전트로 S&amp;P 500 데이터 시각화하기
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>LangChain의 새로운 라이브러리 LangGraph를 소개합니다. LangGraph를 사용하여 멀티 에이전트 콜라보레이션을 구현하고 S&amp;P 500 지수 데이터를 검색하고 시각화하는 방법을 알아보세요.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-06-03 00:00:00 +0000 UTC'>June 3, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;779 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to LangGraph 사용법: 멀티 에이전트로 S&P 500 데이터 시각화하기" href="//localhost:1313/posts/langchain-langgraph-multi-agent-collaboration/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">챗GPT 파인튜닝 기초: gpt-3.5-turbo 모델 사례 분석
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>이 글에서는 인공지능의 핵심 개념 중 하나인 ‘파인튜닝’에 대해 쉽게 이해할 수 있도록 gpt-3.5-turbo 모델을 사례로 들어 설명합니다. 파인튜닝의 정의부터 시작하여, 실제 모델이 어떻게 특정 데이터셋에 맞춰 조정되어 성능이 향상되는지, 그리고 이 과정이 어떻게 여러분의 학습 방법에 영감을 줄 수 있는지에 대해 자세히 알아봅니다.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-03-15 00:00:00 +0000 UTC'>March 15, 2024</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;369 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to 챗GPT 파인튜닝 기초: gpt-3.5-turbo 모델 사례 분석" href="//localhost:1313/posts/ai-fine-tuning-gpt-3.5-turbo-case-study/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">동적 Few-shot 프롬프트를 이용한 텍스트 교정의 일관성 유지
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>본 포스트에서는 대량의 텍스트를 처리할 때 각 청크별 일관성을 유지하는 도전적인 과제를 해결하기 위한 신기술, 동적 Few-shot 프롬프트 방식을 소개합니다. 이 방법은 최근 처리된 교정 사례를 프롬프트로 활용하여 모델이 새로운 텍스트 청크를 일관된 스타일과 톤으로 교정하도록 유도합니다. 구체적인 구현 방안과 예시 코드를 통해, 독자들이 이 기술을 이해하고 자신의 프로젝트에 적용할 수 있도록 안내합니다.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-03-08 00:00:00 +0000 UTC'>March 8, 2024</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;626 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to 동적 Few-shot 프롬프트를 이용한 텍스트 교정의 일관성 유지" href="//localhost:1313/posts/dynamic-few-shot-prompting-for-text-consistency/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">구글 계정 전환 꿀팁! 효율적인 맞춤형 바로가기 만들기
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>다양한 구글 서비스에 빠르게 접근할 수 있는 맞춤형 인터넷 바로가기 생성 방법을 소개합니다.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-03-06 00:00:00 +0000 UTC'>March 6, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;764 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to 구글 계정 전환 꿀팁! 효율적인 맞춤형 바로가기 만들기" href="//localhost:1313/posts/custom-google-service-shortcuts-guide/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">MacOS에서 Streamlit 애플리케이션을 효율적으로 관리하는 방법
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>이 블로그 포스트에서는 MacOS 환경에서 Streamlit 애플리케이션을 지속적으로 실행하고 관리하는 두 가지 주요 방법을 소개합니다. nohup을 사용한 백그라운드 실행과 tmux를 활용한 세션 관리 방법을 탐색하며, 실행 상황 모니터링과 프로세스 종료 방법에 대해서도 논의합니다. 개발자가 자신의 Streamlit 애플리케이션을 더 효과적으로 관리할 수 있도록 도와주는 이 글은 필수 읽을 거리입니다.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-02-23 00:00:00 +0000 UTC'>February 23, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;723 words&nbsp;·&nbsp;**Gunn Kim**</footer>
+  <a class="entry-link" aria-label="post link to MacOS에서 Streamlit 애플리케이션을 효율적으로 관리하는 방법" href="//localhost:1313/posts/managing-streamlit-applications-on-macos/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">[ElephantSQL] PostgreSQL과 Python을 연동하는 방법: 기초부터 코드 예제까지
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>이 글은 Streamlit 프레임워크를 활용해 파이썬으로 개발된 AI 기능이 탑재된 애플리케이션의 로그 데이터를 관리하고 분석하기 위한 데이터베이스 통합의 중요성에 초점을 맞추고 있다. MongoDB와 PostgreSQL 사이의 선택 고민을 탐구하며, 강화학습에 적합한 구조화된 데이터 축적을 위해 PostgreSQL을 선택한 과정을 소개한다. ElephantSQL을 통해 AWS 상에서 서비스로 제공되는 PostgreSQL의 클라우드 기능을 강조하며, psycopg2 라이브러리를 사용해 PostgreSQL 데이터베이스에 연결하고 기본 데이터베이스 작업을 수행하는 방법을 코드 스니펫과 함께 설명한다.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-02-22 00:00:00 +0000 UTC'>February 22, 2024</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;953 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to [ElephantSQL] PostgreSQL과 Python을 연동하는 방법: 기초부터 코드 예제까지" href="//localhost:1313/posts/postgres-vs-mongodb-python-genai-app/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">서론-본론-결론이 아니다. 기승전결이다.
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>서론-본론-결론은 공식적인 글쓰기 구조지만 재미있는 글을 쓰고 싶다면 기승전결 구조를 인식해야 합니다. 이 글은 박종인의 ‘기자의 글쓰기’에서 발취한 항리한 작문 구조에 대한 통찼력 있는 통찼을 제공합니다. 리듬 있는 글쓰기의 부당탈탈한 매력을 발견해 보세요.</p>
+  </div>
+  <footer class="entry-footer"><span title='2024-02-16 07:17:00 +0000 +0000'>February 16, 2024</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;833 words&nbsp;·&nbsp;Gunn Kim</footer>
+  <a class="entry-link" aria-label="post link to 서론-본론-결론이 아니다. 기승전결이다." href="//localhost:1313/posts/narrative-structure-kisungjeonggyeol-not-introduction-body-conclusion/"></a>
+</article>
+<footer class="page-footer">
+  <nav class="pagination">
+    <a class="prev" href="//localhost:1313/">
+      «&nbsp;Prev&nbsp;
+    </a>
+    <a class="next" href="//localhost:1313/page/3/">Next&nbsp;&nbsp;»
+    </a>
+  </nav>
+</footer>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="//localhost:1313/">My Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

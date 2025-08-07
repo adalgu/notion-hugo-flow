@@ -4,6 +4,11 @@
 
 set -e
 
+# Ensure we're in the project root directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+
 echo "🚀 Notion-Hugo Flow Quick Setup for GitHub Pages"
 echo "================================================"
 
@@ -32,9 +37,27 @@ fi
 echo "📦 Installing dependencies..."
 pip3 install -r dev/requirements.txt
 
-# Run quickstart
+# Run quickstart with error handling
 echo "🔧 Running smart configuration..."
-python3 app.py quickstart --token "$NOTION_TOKEN"
+if ! python3 app.py quickstart --token "$NOTION_TOKEN"; then
+    echo ""
+    echo "⚠️  Setup encountered issues. This might be due to:"
+    echo "   - Invalid Notion API token"
+    echo "   - Missing Notion integration permissions"
+    echo "   - Network connectivity issues"
+    echo ""
+    echo "🔧 Troubleshooting options:"
+    echo "1. Try interactive mode: python3 app.py quickstart --token \"$NOTION_TOKEN\" --interactive"
+    echo "2. Check your Notion integration permissions at: https://www.notion.so/my-integrations"
+    echo "3. Ensure your integration has access to the workspace"
+    echo ""
+    echo "Continue with GitHub setup anyway? (y/N)"
+    read -r response
+    if [[ ! "$response" =~ ^[Yy]$ ]]; then
+        echo "Setup cancelled. Please fix the issues and try again."
+        exit 1
+    fi
+fi
 
 # Git operations
 echo "📝 Preparing for GitHub deployment..."

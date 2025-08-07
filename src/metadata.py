@@ -16,12 +16,12 @@ from typing import Dict, Any, List, Optional, Set
 class MetadataManager:
     """Notion-Hugo 메타데이터 관리 클래스"""
     
-    def __init__(self, file_path: str = ".notion-hugo-state.json"):
+    def __init__(self, file_path: str = "src/config/.notion-hugo-state.json"):
         """
         MetadataManager 클래스 초기화
         
         Args:
-            file_path: 메타데이터 파일 경로 (기본값: ".notion-hugo-state.json")
+            file_path: 메타데이터 파일 경로 (기본값: "src/config/.notion-hugo-state.json")
         """
         self.file_path = file_path
         self.metadata = self._load_or_create()

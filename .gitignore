@@ -48,8 +48,8 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
-.notion-hugo-state.json
-.notion-hugo-state.json.bak
+src/config/.notion-hugo-state.json
+src/config/.notion-hugo-state.json.bak
 data/error_temp.md
 data/error_temp/
 .vercel
@@ -68,7 +68,7 @@ logs/
 
 # CI/CD sensitive files
 .env.*
-!.env.example
+
 
 # Docker production artifacts
 docker-compose.override.yml
