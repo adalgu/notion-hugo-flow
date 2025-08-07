@@ -1,1 +1,24 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Digital Transformation on Exobrain</title><link>http://localhost:1313/tags/digital-transformation/</link><description>Recent content in Digital Transformation on Exobrain</description><image><title>Exobrain</title><url>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url><link>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link></image><generator>Hugo -- 0.140.0</generator><language>en</language><lastBuildDate>Sun, 22 Jun 2025 03:30:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/tags/digital-transformation/index.xml" rel="self" type="application/rss+xml"/><item><title>아이폰 혁신 통합: 모바일 생태계와 디지털 경제에 미친 영향</title><link>http://localhost:1313/posts/iphone-innovation-impact-mobile-ecosystem/</link><pubDate>Wed, 02 Apr 2025 00:00:00 +0000</pubDate><guid>http://localhost:1313/posts/iphone-innovation-impact-mobile-ecosystem/</guid><description>아이폰은 단순한 기기가 아닌, 기존 기술의 혁신적 통합과 사용자 중심 디자인으로 모바일 산업과 디지털 경제, 라이프스타일을 근본부터 변혁시킨 촉매제였습니다. 이 포스트에서는 아이폰의 성공 요인과 파급 효과, 그리고 미래 기술 혁신에 주는 교훈을 분석합니다.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Digital Transformation on My Blog</title>
+    <link>//localhost:1313/tags/digital-transformation/</link>
+    <description>Recent content in Digital Transformation on My Blog</description>
+    <image>
+      <title>My Blog</title>
+      <url>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
+      <link>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
+    </image>
+    <generator>Hugo -- 0.140.0</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 22 Jun 2025 03:30:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/tags/digital-transformation/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>아이폰 혁신 통합: 모바일 생태계와 디지털 경제에 미친 영향</title>
+      <link>//localhost:1313/posts/iphone-innovation-impact-mobile-ecosystem/</link>
+      <pubDate>Wed, 02 Apr 2025 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/iphone-innovation-impact-mobile-ecosystem/</guid>
+      <description>아이폰은 단순한 기기가 아닌, 기존 기술의 혁신적 통합과 사용자 중심 디자인으로 모바일 산업과 디지털 경제, 라이프스타일을 근본부터 변혁시킨 촉매제였습니다. 이 포스트에서는 아이폰의 성공 요인과 파급 효과, 그리고 미래 기술 혁신에 주는 교훈을 분석합니다.</description>
+    </item>
+  </channel>
+</rss>

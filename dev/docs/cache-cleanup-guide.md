@@ -23,7 +23,7 @@ chmod +x scripts/cleanup-legacy-files.sh
 
 ```bash
 # 상태 파일 삭제 (전체 재빌드 강제)
-rm .notion-hugo-state.json
+rm src/config/.notion-hugo-state.json
 
 # GitHub Actions 캐시 무효화를 위한 커밋
 git add .
@@ -61,7 +61,7 @@ grep -r "{{< staticref " content/posts/
 - name: Force full rebuild on schedule
   if: github.event_name == 'schedule'
   run: |
-    rm -f .notion-hugo-state.json
+    rm -f src/config/.notion-hugo-state.json
     echo "Forced full rebuild due to scheduled run"
 ```
 
@@ -71,7 +71,7 @@ grep -r "{{< staticref " content/posts/
 - name: Cache Notion state
   uses: actions/cache@v4
   with:
-    path: .notion-hugo-state.json
+    path: src/config/.notion-hugo-state.json
     key: notion-state-${{ github.ref }}-${{ hashFiles('notion-hugo.config.yaml') }}
     restore-keys: |
       notion-state-${{ github.ref }}-

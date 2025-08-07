@@ -1,1 +1,24 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>데이터분석 on Exobrain</title><link>http://localhost:1313/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B6%84%EC%84%9D/</link><description>Recent content in 데이터분석 on Exobrain</description><image><title>Exobrain</title><url>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url><link>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link></image><generator>Hugo -- 0.140.0</generator><language>en</language><lastBuildDate>Fri, 04 Apr 2025 09:47:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B6%84%EC%84%9D/index.xml" rel="self" type="application/rss+xml"/><item><title>파이썬으로 Active ETF 종목 변동 분석하기</title><link>http://localhost:1313/posts/analyzing-active-etf-with-python/</link><pubDate>Mon, 24 Jun 2024 00:00:00 +0000</pubDate><guid>http://localhost:1313/posts/analyzing-active-etf-with-python/</guid><description>이 포스트에서는 파이썬을 사용하여 Active ETF의 종목 변동을 분석하는 방법을 소개합니다. 타임폴리오 자산운용의 &amp;#39;타임폴리오 코리아 플러스배당액티브 ETF&amp;#39;를 예시로 데이터 수집, 분석, 시각화를 통해 매니저의 투자 전략을 파악하는 방법을 배워보세요.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>데이터분석 on My Blog</title>
+    <link>//localhost:1313/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B6%84%EC%84%9D/</link>
+    <description>Recent content in 데이터분석 on My Blog</description>
+    <image>
+      <title>My Blog</title>
+      <url>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
+      <link>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
+    </image>
+    <generator>Hugo -- 0.140.0</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 04 Apr 2025 09:47:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/tags/%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%B6%84%EC%84%9D/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>파이썬으로 Active ETF 종목 변동 분석하기</title>
+      <link>//localhost:1313/posts/analyzing-active-etf-with-python/</link>
+      <pubDate>Mon, 24 Jun 2024 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/analyzing-active-etf-with-python/</guid>
+      <description>이 포스트에서는 파이썬을 사용하여 Active ETF의 종목 변동을 분석하는 방법을 소개합니다. 타임폴리오 자산운용의 &amp;#39;타임폴리오 코리아 플러스배당액티브 ETF&amp;#39;를 예시로 데이터 수집, 분석, 시각화를 통해 매니저의 투자 전략을 파악하는 방법을 배워보세요.</description>
+    </item>
+  </channel>
+</rss>

@@ -1,1 +1,24 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>몽클레르 on Exobrain</title><link>http://localhost:1313/tags/%EB%AA%BD%ED%81%B4%EB%A0%88%EB%A5%B4/</link><description>Recent content in 몽클레르 on Exobrain</description><image><title>Exobrain</title><url>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url><link>http://localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link></image><generator>Hugo -- 0.140.0</generator><language>en</language><lastBuildDate>Fri, 04 Apr 2025 09:46:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/tags/%EB%AA%BD%ED%81%B4%EB%A0%88%EB%A5%B4/index.xml" rel="self" type="application/rss+xml"/><item><title>이수지 때문에 못 입겠어!" 강남 엄마들 몽클레르 패딩 '손절' 사태</title><link>http://localhost:1313/posts/gangnam-moms-moncler-controversy/</link><pubDate>Fri, 14 Feb 2025 00:00:00 +0000</pubDate><guid>http://localhost:1313/posts/gangnam-moms-moncler-controversy/</guid><description>개그우먼 이수지의 &amp;#39;대치동 엄마 패러디&amp;#39; 영상 이후, 강남 엄마들 사이에서 몽클레르 패딩을 기피하는 현상이 나타나고 있다. 중고 매물이 급증하고 맘카페에는 관련 글이 쏟아지는 등 몽클레르 패딩의 인기가 급락하고 있다.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>몽클레르 on My Blog</title>
+    <link>//localhost:1313/tags/%EB%AA%BD%ED%81%B4%EB%A0%88%EB%A5%B4/</link>
+    <description>Recent content in 몽클레르 on My Blog</description>
+    <image>
+      <title>My Blog</title>
+      <url>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</url>
+      <link>//localhost:1313/%3Clink%20or%20path%20of%20image%20for%20opengraph,%20twitter-cards%3E</link>
+    </image>
+    <generator>Hugo -- 0.140.0</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 04 Apr 2025 09:46:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/tags/%EB%AA%BD%ED%81%B4%EB%A0%88%EB%A5%B4/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>이수지 때문에 못 입겠어!&#34; 강남 엄마들 몽클레르 패딩 &#39;손절&#39; 사태</title>
+      <link>//localhost:1313/posts/gangnam-moms-moncler-controversy/</link>
+      <pubDate>Fri, 14 Feb 2025 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/posts/gangnam-moms-moncler-controversy/</guid>
+      <description>개그우먼 이수지의 &amp;#39;대치동 엄마 패러디&amp;#39; 영상 이후, 강남 엄마들 사이에서 몽클레르 패딩을 기피하는 현상이 나타나고 있다. 중고 매물이 급증하고 맘카페에는 관련 글이 쏟아지는 등 몽클레르 패딩의 인기가 급락하고 있다.</description>
+    </item>
+  </channel>
+</rss>

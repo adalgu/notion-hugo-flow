@@ -233,7 +233,7 @@ The old configuration structure maps to the new structure as follows:
 | `deployment.auto_deploy` | `deployment.github_actions.auto_deploy` |
 
 ### From Hugo config files
-Hugo configuration files in `blog/config/_default/` are consolidated:
+Hugo configuration files in `{hugo_root}/config/_default/` are consolidated:
 
 | Old File | New Section |
 |----------|-------------|

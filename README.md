@@ -161,6 +161,58 @@ python -m pytest
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Roadmap
+
+### ✅ Completed Features
+
+#### Core Infrastructure
+- [x] **Modern CLI Interface** - Click-based command-line interface with comprehensive commands
+- [x] **Smart Configuration Management** - Auto-detection and configuration of environment settings
+- [x] **Notion API Integration** - Full Notion API v2 support with database operations
+- [x] **Hugo Integration** - Seamless Hugo site generation and management
+- [x] **Markdown Conversion** - Notion blocks to Hugo-compatible markdown conversion
+- [x] **Property Mapping** - Intelligent mapping of Notion properties to Hugo frontmatter
+
+#### Setup & Automation
+- [x] **Quick Setup Pipeline** - One-command setup from token to live blog
+- [x] **Interactive Setup** - Guided setup process with user choices
+- [x] **Database Migration** - Support for migrating from existing Notion databases
+- [x] **GitHub Integration** - Automated GitHub Pages deployment setup
+- [x] **Sample Content Generation** - Auto-generation of sample blog posts
+
+#### Content Management
+- [x] **Incremental Sync** - Smart sync that only updates changed content
+- [x] **Bidirectional Sync** - Notion ↔ Local markdown synchronization
+- [x] **Draft/Publish Workflow** - Content publishing control via Notion properties
+- [x] **Category & Tag Management** - Automatic categorization and tagging
+- [x] **SEO Optimization** - Meta tags, structured data, and sitemap generation
+
+#### Development Tools
+- [x] **Configuration Validation** - Comprehensive config validation and diagnostics
+- [x] **Error Handling** - Graceful error handling with helpful error messages
+- [x] **Progress Tracking** - Real-time progress indicators for long-running operations
+- [x] **Development Server** - Local Hugo development server with live reload
+- [x] **State Management** - Persistent state tracking for incremental operations
+
+### 🚧 Core Features (In Development)
+
+#### Bidirectional Sync Enhancement
+- [ ] **Local-First Workflow** - Optimized local markdown editing with sync to Notion
+- [ ] **Conflict Resolution** - Smart conflict resolution for simultaneous edits
+- [ ] **Real-time Sync** - Live synchronization between local files and Notion
+- [ ] **Offline Support** - Work offline and sync when connection is restored
+
+#### Content Management
+- [ ] **Advanced Block Types** - Full support for all Notion block types
+- [ ] **Image Handling** - Automatic image download and optimization
+- [ ] **Custom Shortcodes** - Hugo shortcodes for Notion-specific content
+
+---
+
+*For detailed internal roadmap including performance optimizations, deployment integrations, and advanced features, see [Internal Development Roadmap](dev/docs/internal-roadmap.md).*
+
+---
+
 ## Support
 
 - 📖 [Documentation](https://github.com/adalgu/notion-hugo-flow/wiki)

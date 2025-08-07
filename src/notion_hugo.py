@@ -107,8 +107,8 @@ def parse_arguments():
     )
     incremental_group.add_argument(
         "--state-file",
-        default=".notion-hugo-state.json",
-        help="메타데이터 파일 위치 (기본값: .notion-hugo-state.json)",
+        default="src/config/.notion-hugo-state.json",
+        help="메타데이터 파일 위치 (기본값: src/config/.notion-hugo-state.json)",
     )
     incremental_group.add_argument(
         "--dry-run", action="store_true", help="실제 변환 없이 변경사항만 확인"
@@ -120,7 +120,9 @@ def parse_arguments():
         "--interactive", "-i", action="store_true", help="대화형 설정 모드로 실행"
     )
     interactive_group.add_argument(
-        "--quick-setup", action="store_true", help="원스톱 빠른 설정 (노션 키만으로 자동 설정)"
+        "--quick-setup",
+        action="store_true",
+        help="원스톱 빠른 설정 (노션 키만으로 자동 설정)",
     )
     interactive_group.add_argument(
         "--validate", action="store_true", help="현재 노션-휴고 설정을 검증"
@@ -131,16 +133,20 @@ def parse_arguments():
 
 def run_notion_pipeline(
     incremental: bool = True,
-    state_file: str = ".notion-hugo-state.json",
+    state_file: str = "src/config/.notion-hugo-state.json",
     dry_run: bool = False,
+    large_db_mode: bool = False,
+    professional_mode: bool = False,
 ) -> Dict[str, Any]:
     """
     Notion 파이프라인을 실행합니다 (마크다운 변환).
 
     Args:
         incremental: 증분 처리 여부 (기본값: True)
-        state_file: 메타데이터 파일 경로 (기본값: ".notion-hugo-state.json")
+        state_file: 메타데이터 파일 경로 (기본값: "src/config/.notion-hugo-state.json")
         dry_run: 실제 변환 없이 변경사항만 확인 (기본값: False)
+        large_db_mode: 대용량 데이터베이스 처리 모드 (기본값: False)
+        professional_mode: 전문 마이그레이션 모드 (기본값: False)
 
     Returns:
         처리 결과 (성공 여부, 페이지 ID 목록, 결과 목록)
@@ -161,8 +167,14 @@ def run_notion_pipeline(
         if incremental:
             print(f"[Info] 메타데이터 로드 완료 (파일: {state_file})")
 
-        # 증분 처리 모드 표시
-        if incremental:
+        # 처리 모드 표시
+        if professional_mode:
+            print("[Info] 전문 마이그레이션 모드: 제한 없이 모든 페이지를 처리합니다")
+        elif large_db_mode:
+            print(
+                "[Info] 대용량 데이터베이스 모드: 제한된 개수로 처리하고 에러 시 fallback합니다"
+            )
+        elif incremental:
             print("[Info] 증분 처리 모드: 변경된 페이지만 처리합니다")
         else:
             print("[Info] 전체 동기화 모드: 모든 페이지를 처리합니다")
@@ -177,29 +189,43 @@ def run_notion_pipeline(
         processor = HugoProcessor()
         processor.ensure_structure()
 
-        # 데이터베이스와 페이지 처리 (증분 처리 적용)
-        if incremental and metadata:
-            db_results = process_databases_incremental(
+        # 처리 모드에 따른 분기
+        if professional_mode:
+            # 전문 마이그레이션 모드
+            db_results = run_professional_migration(notion, config, metadata, dry_run)
+            page_results = {"page_ids": [], "results": []}  # 페이지는 별도 처리
+        elif large_db_mode:
+            # 대용량 데이터베이스 처리 모드
+            db_results = process_large_database_with_fallback(
                 notion, config, metadata, dry_run
             )
-            page_results = process_pages_incremental(notion, config, metadata, dry_run)
+            page_results = {"page_ids": [], "results": []}  # 페이지는 별도 처리
         else:
-            db_results = process_databases(notion, config)
-            page_results = process_pages(notion, config)
+            # 기본 처리 모드
+            if incremental and metadata:
+                db_results = process_databases_incremental(
+                    notion, config, metadata, dry_run
+                )
+                page_results = process_pages_incremental(
+                    notion, config, metadata, dry_run
+                )
+            else:
+                db_results = process_databases(notion, config)
+                page_results = process_pages(notion, config)
 
         # 모든 페이지 ID와 결과 결합
-        all_page_ids = db_results["page_ids"] + page_results["page_ids"]
-        all_results = db_results["results"] + page_results["results"]
+        all_page_ids = db_results.get("page_ids", []) + page_results.get("page_ids", [])
+        all_results = db_results.get("results", []) + page_results.get("results", [])
 
         if not dry_run:
             # 고아 파일 정리 (메타데이터 기반)
-            if incremental and metadata:
+            if incremental and metadata and not large_db_mode and not professional_mode:
                 cleanup_orphaned_files_with_metadata(all_page_ids, metadata)
             else:
                 cleanup_orphaned_files(all_page_ids)
 
             # 메타데이터 저장
-            if incremental and metadata:
+            if incremental and metadata and not large_db_mode and not professional_mode:
                 metadata.save()
                 print(f"[Info] 메타데이터 저장 완료 (파일: {state_file})")
 
@@ -207,13 +233,33 @@ def run_notion_pipeline(
         print_results(all_results)
 
         # 변환 실패 여부 확인
-        has_errors = any(len(result["errors"]) > 0 for result in all_results)
+        has_errors = any(len(result.get("errors", [])) > 0 for result in all_results)
 
-        return {
+        # 결과에 처리 모드 정보 추가
+        result = {
             "success": not has_errors,
             "page_ids": all_page_ids,
             "results": all_results,
         }
+
+        if large_db_mode:
+            result.update(
+                {
+                    "mode": db_results.get("mode", "large_db"),
+                    "fallback_used": db_results.get("fallback_used", False),
+                    "pages_processed": db_results.get("pages_processed", 0),
+                    "total_pages": db_results.get("total_pages", 0),
+                }
+            )
+        elif professional_mode:
+            result.update(
+                {
+                    "mode": "professional_migration",
+                    "pages_processed": db_results.get("pages_processed", 0),
+                }
+            )
+
+        return result
 
     except Exception as e:
         print(f"[Error] {str(e)}")
@@ -656,28 +702,35 @@ def cleanup_orphaned_files(page_ids: List[str]) -> None:
 def validate_hugo_build() -> bool:
     """
     Hugo 빌드 결과를 검증합니다.
-    
+
     Returns:
         빌드가 유효한지 여부
     """
-    public_dir = "public"
-    
+    # 설정에서 Hugo public 경로 읽기
+    try:
+        from .config import ConfigManager
+    except ImportError:
+        from config import ConfigManager
+
+    config_manager = ConfigManager()
+    public_dir = config_manager.get_hugo_public_path()
+
     # public 디렉토리 존재 확인
     if not os.path.exists(public_dir):
         print(f"[Error] {public_dir} 디렉토리가 존재하지 않습니다")
         return False
-    
+
     # public 디렉토리가 비어있는지 확인
     if not os.listdir(public_dir):
         print(f"[Error] {public_dir} 디렉토리가 비어있습니다")
         return False
-    
+
     # index.html 파일 존재 확인
     index_file = os.path.join(public_dir, "index.html")
     if not os.path.exists(index_file):
         print(f"[Error] {index_file} 파일이 없습니다")
         return False
-    
+
     # index.html 파일 크기 확인 (너무 작으면 빈 페이지)
     try:
         file_size = os.path.getsize(index_file)
@@ -687,13 +740,13 @@ def validate_hugo_build() -> bool:
     except OSError as e:
         print(f"[Error] {index_file} 파일 크기 확인 실패: {e}")
         return False
-    
+
     # 기본 콘텐츠 폴더 확인
     posts_dir = os.path.join(public_dir, "posts")
     if os.path.exists(posts_dir):
-        post_files = [f for f in os.listdir(posts_dir) if f.endswith('.html')]
+        post_files = [f for f in os.listdir(posts_dir) if f.endswith(".html")]
         print(f"[Info] {len(post_files)}개의 포스트 페이지가 생성되었습니다")
-    
+
     print("[Info] Hugo 빌드 검증 통과")
     return True
 
@@ -1100,10 +1153,10 @@ def run_interactive_setup() -> Dict[str, Any]:
 def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
     """
     원스톱 빠른 설정을 실행합니다.
-    
+
     Args:
         target_folder: 대상 폴더
-        
+
     Returns:
         설정 결과
     """
@@ -1123,7 +1176,7 @@ def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
 
         print_header("노션-휴고 원스톱 빠른 설정")
         print_info("노션 API 키만으로 자동으로 데이터베이스를 생성하고 설정합니다.")
-        
+
         # NotionSetup 인스턴스 생성
         setup_config: NotionSetupConfig = {
             "parent_page_id": None,  # 자동으로 최적 위치 결정
@@ -1134,7 +1187,7 @@ def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
 
         # 원스톱 설정 실행
         result = setup.quick_setup(target_folder)
-        
+
         if result["success"]:
             print_success("원스톱 설정이 완료되었습니다!")
             return {"success": True, "database_id": result["database_id"]}
@@ -1152,7 +1205,7 @@ def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
 def run_validation() -> Dict[str, Any]:
     """
     현재 설정을 검증합니다.
-    
+
     Returns:
         검증 결과
     """
@@ -1171,7 +1224,7 @@ def run_validation() -> Dict[str, Any]:
             return {"success": False, "error": "NOTION_TOKEN 누락"}
 
         print_header("노션-휴고 설정 검증")
-        
+
         # NotionSetup 인스턴스 생성
         setup_config: NotionSetupConfig = {
             "parent_page_id": None,
@@ -1182,12 +1235,367 @@ def run_validation() -> Dict[str, Any]:
 
         # 검증 실행
         result = setup.validate_setup()
-        
+
         return {"success": result["valid"], "validation_result": result}
 
     except Exception as e:
         print(f"[Error] 설정 검증 실패: {str(e)}")
         return {"success": False, "error": str(e)}
+
+
+def process_large_database_with_fallback(
+    notion: Client,
+    config: Config,
+    metadata: Optional[MetadataManager] = None,
+    dry_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    대용량 데이터베이스를 제한된 개수로 처리하고, 에러 시 fallback하는 함수.
+
+    Args:
+        notion: Notion API 클라이언트
+        config: 앱 설정
+        metadata: 메타데이터 관리자 (선택사항)
+        dry_run: 실제 변환 없이 변경사항만 확인
+
+    Returns:
+        처리 결과와 fallback 여부를 포함하는 딕셔너리
+    """
+    large_db_config = config.get("sync", {}).get("large_database", {})
+    enable_limited = large_db_config.get("enable_limited_migration", True)
+    max_pages = large_db_config.get("max_pages_limited", 100)
+    enable_fallback = large_db_config.get("enable_fallback", True)
+    timeout = large_db_config.get("timeout_large_db", 300)
+    progress_interval = large_db_config.get("progress_interval", 10)
+
+    print(f"[Info] 대용량 데이터베이스 처리 모드 활성화")
+    print(f"[Info] 제한된 처리: 최대 {max_pages}개 페이지")
+    print(f"[Info] Fallback 활성화: {enable_fallback}")
+
+    try:
+        # 시나리오 3-1: 제한된 마이그레이션 시도
+        if enable_limited:
+            print("[Info] 시나리오 3-1: 제한된 마이그레이션 시작")
+            result = process_databases_limited(
+                notion, config, metadata, max_pages, timeout, progress_interval, dry_run
+            )
+
+            if result.get("success", False):
+                print("[Info] 제한된 마이그레이션 성공")
+                return {
+                    "success": True,
+                    "mode": "limited_migration",
+                    "pages_processed": result.get("pages_processed", 0),
+                    "total_pages": result.get("total_pages", 0),
+                    "fallback_used": False,
+                    "results": result,
+                }
+            else:
+                print("[Warning] 제한된 마이그레이션 실패")
+
+        # Fallback이 활성화된 경우 시나리오 2로 전환
+        if enable_fallback:
+            print("[Info] Fallback: 시나리오 2 (기본 동기화)로 전환")
+            fallback_result = process_databases_fallback(
+                notion, config, metadata, dry_run
+            )
+
+            return {
+                "success": fallback_result.get("success", False),
+                "mode": "fallback",
+                "fallback_used": True,
+                "original_error": result.get("error", "Unknown error"),
+                "results": fallback_result,
+            }
+        else:
+            print("[Error] Fallback이 비활성화되어 있어 처리 중단")
+            return {
+                "success": False,
+                "mode": "limited_migration_failed",
+                "fallback_used": False,
+                "error": result.get(
+                    "error", "Limited migration failed and fallback disabled"
+                ),
+            }
+
+    except Exception as e:
+        print(f"[Error] 대용량 데이터베이스 처리 중 예외 발생: {str(e)}")
+
+        if enable_fallback:
+            print("[Info] 예외 발생으로 인한 Fallback: 시나리오 2로 전환")
+            try:
+                fallback_result = process_databases_fallback(
+                    notion, config, metadata, dry_run
+                )
+                return {
+                    "success": fallback_result.get("success", False),
+                    "mode": "fallback_exception",
+                    "fallback_used": True,
+                    "original_error": str(e),
+                    "results": fallback_result,
+                }
+            except Exception as fallback_error:
+                print(f"[Error] Fallback 처리도 실패: {str(fallback_error)}")
+                return {
+                    "success": False,
+                    "mode": "both_failed",
+                    "fallback_used": True,
+                    "original_error": str(e),
+                    "fallback_error": str(fallback_error),
+                }
+        else:
+            return {
+                "success": False,
+                "mode": "limited_migration_exception",
+                "fallback_used": False,
+                "error": str(e),
+            }
+
+
+def process_databases_limited(
+    notion: Client,
+    config: Config,
+    metadata: Optional[MetadataManager],
+    max_pages: int,
+    timeout: int,
+    progress_interval: int,
+    dry_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    제한된 개수의 페이지만 처리하는 함수.
+
+    Args:
+        notion: Notion API 클라이언트
+        config: 앱 설정
+        metadata: 메타데이터 관리자
+        max_pages: 처리할 최대 페이지 수
+        timeout: 타임아웃 (초)
+        progress_interval: 진행상황 보고 간격
+        dry_run: 실제 변환 없이 변경사항만 확인
+
+    Returns:
+        제한된 처리 결과
+    """
+    page_ids = []
+    results = []
+    pages_processed = 0
+    total_pages = 0
+
+    print(f"[Info] 제한된 데이터베이스 처리 시작 (최대 {max_pages}개 페이지)")
+
+    for mount in config["mount"]["databases"]:
+        ensure_directory(f"content/{mount['target_folder']}")
+
+        try:
+            # 데이터베이스의 총 페이지 수 확인
+            print(f"[Info] 데이터베이스 {mount['database_id']} 크기 확인 중...")
+            db_info = notion.databases.retrieve(database_id=mount["database_id"])
+
+            # 페이지 조회 (제한된 개수)
+            pages = []
+            page_count = 0
+
+            for page in iterate_paginated_api(
+                notion.databases.query, {"database_id": mount["database_id"]}
+            ):
+                if page.get("object") != "page":
+                    continue
+
+                pages.append(page)
+                page_ids.append(page["id"])
+                page_count += 1
+                total_pages += 1
+
+                # 진행상황 보고
+                if page_count % progress_interval == 0:
+                    print(f"[Progress] {page_count}개 페이지 처리 중...")
+
+                # 최대 개수에 도달하면 중단
+                if page_count >= max_pages:
+                    print(f"[Info] 최대 페이지 수({max_pages})에 도달하여 처리 중단")
+                    break
+
+            if pages:
+                print(
+                    f"[Info] 데이터베이스 {mount['database_id']}에서 {len(pages)}개 페이지 처리 중"
+                )
+
+                if metadata:
+                    result = batch_process_pages_with_metadata(
+                        pages, notion, mount, metadata, config
+                    )
+                else:
+                    result = batch_process_pages(pages, notion, mount, config)
+
+                results.append(result)
+                pages_processed += len(pages)
+
+        except Exception as e:
+            print(f"[Error] 데이터베이스 {mount['database_id']} 처리 실패: {str(e)}")
+            return {
+                "success": False,
+                "error": f"Database processing failed: {str(e)}",
+                "pages_processed": pages_processed,
+                "total_pages": total_pages,
+            }
+
+    return {
+        "success": True,
+        "page_ids": page_ids,
+        "results": results,
+        "pages_processed": pages_processed,
+        "total_pages": total_pages,
+    }
+
+
+def process_databases_fallback(
+    notion: Client,
+    config: Config,
+    metadata: Optional[MetadataManager],
+    dry_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    Fallback 처리를 위한 기본 동기화 함수 (시나리오 2).
+
+    Args:
+        notion: Notion API 클라이언트
+        config: 앱 설정
+        metadata: 메타데이터 관리자
+        dry_run: 실제 변환 없이 변경사항만 확인
+
+    Returns:
+        Fallback 처리 결과
+    """
+    print("[Info] Fallback: 기본 동기화 모드로 전환")
+
+    try:
+        # 기본 동기화 로직 사용
+        if metadata:
+            return process_databases_incremental(notion, config, metadata, dry_run)
+        else:
+            return process_databases(notion, config)
+    except Exception as e:
+        print(f"[Error] Fallback 처리 실패: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Fallback processing failed: {str(e)}",
+            "page_ids": [],
+            "results": [],
+        }
+
+
+def run_professional_migration(
+    notion: Client,
+    config: Config,
+    metadata: Optional[MetadataManager] = None,
+    dry_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    전문 마이그레이션 명령어 - 제한 없이 모든 페이지를 처리.
+
+    Args:
+        notion: Notion API 클라이언트
+        config: 앱 설정
+        metadata: 메타데이터 관리자 (선택사항)
+        dry_run: 실제 변환 없이 변경사항만 확인
+
+    Returns:
+        전문 마이그레이션 결과
+    """
+    pro_config = config.get("sync", {}).get("professional_migration", {})
+    batch_size = pro_config.get("batch_size_pro", 50)
+    memory_optimization = pro_config.get("memory_optimization", True)
+
+    print("[Info] 전문 마이그레이션 모드 활성화")
+    print(f"[Info] 배치 크기: {batch_size}")
+    print(f"[Info] 메모리 최적화: {memory_optimization}")
+
+    page_ids = []
+    results = []
+    total_processed = 0
+
+    for mount in config["mount"]["databases"]:
+        ensure_directory(f"content/{mount['target_folder']}")
+
+        try:
+            # 데이터베이스의 모든 페이지를 배치로 처리
+            print(f"[Info] 데이터베이스 {mount['database_id']} 전문 마이그레이션 시작")
+
+            batch_pages = []
+            batch_count = 0
+
+            for page in iterate_paginated_api(
+                notion.databases.query, {"database_id": mount["database_id"]}
+            ):
+                if page.get("object") != "page":
+                    continue
+
+                batch_pages.append(page)
+                page_ids.append(page["id"])
+
+                # 배치 크기에 도달하면 처리
+                if len(batch_pages) >= batch_size:
+                    print(
+                        f"[Progress] 배치 {batch_count + 1} 처리 중... ({len(batch_pages)}개 페이지)"
+                    )
+
+                    if metadata:
+                        result = batch_process_pages_with_metadata(
+                            batch_pages, notion, mount, metadata, config
+                        )
+                    else:
+                        result = batch_process_pages(batch_pages, notion, mount, config)
+
+                    results.append(result)
+                    total_processed += len(batch_pages)
+                    batch_count += 1
+
+                    # 메모리 최적화: 배치 처리 후 메모리 정리
+                    if memory_optimization:
+                        batch_pages = []
+                        import gc
+
+                        gc.collect()
+                    else:
+                        batch_pages = []
+
+            # 남은 페이지 처리
+            if batch_pages:
+                print(
+                    f"[Progress] 마지막 배치 처리 중... ({len(batch_pages)}개 페이지)"
+                )
+
+                if metadata:
+                    result = batch_process_pages_with_metadata(
+                        batch_pages, notion, mount, metadata, config
+                    )
+                else:
+                    result = batch_process_pages(batch_pages, notion, mount, config)
+
+                results.append(result)
+                total_processed += len(batch_pages)
+
+        except Exception as e:
+            print(
+                f"[Error] 데이터베이스 {mount['database_id']} 전문 마이그레이션 실패: {str(e)}"
+            )
+            return {
+                "success": False,
+                "error": f"Professional migration failed: {str(e)}",
+                "pages_processed": total_processed,
+                "page_ids": page_ids,
+                "results": results,
+            }
+
+    print(f"[Info] 전문 마이그레이션 완료: 총 {total_processed}개 페이지 처리")
+
+    return {
+        "success": True,
+        "page_ids": page_ids,
+        "results": results,
+        "pages_processed": total_processed,
+        "mode": "professional_migration",
+    }
 
 
 def main():
@@ -1218,6 +1626,7 @@ def main():
 
             # 빠른 설정 후 바로 동기화 실행
             from .cli_utils import print_info
+
             print_info("설정이 완료되었습니다. 노션-휴고 동기화를 시작합니다...")
 
         # 대화형 설정 모드
@@ -1284,9 +1693,9 @@ def main():
                 dry_run=args.dry_run,
             )
             print(f"Notion 처리 완료: {notion_result['success']}")
-            
+
             # Critical: Check if Notion pipeline failed
-            if not notion_result.get('success', False):
+            if not notion_result.get("success", False):
                 print("[Error] Notion 파이프라인 실패 - 배포 중단")
                 sys.exit(1)
 
@@ -1308,12 +1717,12 @@ def main():
             if hugo_result["build_success"] is not None:
                 if hugo_result["build_success"]:
                     print("Hugo 빌드 완료")
-                    
+
                     # Critical: Validate build output
                     if not validate_hugo_build():
                         print("[Error] Hugo 빌드 검증 실패 - 빈 콘텐츠 감지")
                         sys.exit(1)
-                        
+
                 else:
                     print("Hugo 빌드 중 오류 발생")
                     sys.exit(1)

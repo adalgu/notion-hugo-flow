@@ -1,222 +1,179 @@
-# Database ID 보안 관리 가이드
+# Database ID 보안 및 사용 가이드
 
-## 🔒 문제 상황
+## 🔍 개요
 
-기존 `notion-hugo.config.yaml` 파일에 database_id가 하드코딩되어 있어 다음과 같은 보안 문제가 있었습니다:
+이 문서는 Notion-Hugo Flow에서 Database ID를 안전하고 효율적으로 관리하는 방법을 설명합니다.
 
-1. **Git 저장소 노출**: database_id가 공개 저장소에 노출됨
-2. **원클릭 배포 제약**: 사용자가 수동으로 database_id를 설정해야 함
-3. **보안 위험**: 민감한 정보가 코드에 포함됨
+## 🚀 CLI에서 Database ID 사용
 
-## ✅ 해결책: 하이브리드 접근 방식
+### 1. **자동 생성 (기본)**
+```bash
+python app.py setup --token YOUR_NOTION_TOKEN
+# → Database 자동 생성 + ID 자동 설정
+```
 
-**환경변수 우선 + YAML 폴백** 방식을 도입하여 보안과 편의성을 모두 확보했습니다.
+### 2. **기존 Database ID 사용**
+```bash
+python app.py setup --token YOUR_NOTION_TOKEN --database-id EXISTING_DB_ID
+# → 기존 Database ID를 사용하여 설정
+```
 
-### 1. 환경변수 우선 처리
+### 3. **Database 마이그레이션**
+```bash
+python app.py setup --token YOUR_NOTION_TOKEN --migrate-from OLD_DB_ID
+# → 기존 Database에서 새 Database로 마이그레이션
+```
 
+### 4. **인터랙티브 모드**
+```bash
+python app.py setup --token YOUR_NOTION_TOKEN --interactive
+# → 대화형으로 Database 설정
+```
+
+## 🔐 핵심 보안 원칙
+
+**"토큰만 있어도 Notion → Hugo → GitHub Pages가 가능하다"**
+
+### ✅ **자동화된 보안**
+- Database ID 자동 생성 및 설정
+- 환경 변수 자동 관리
+- 설정 파일 자동 업데이트
+- `.gitignore` 자동 설정
+
+### 🎯 **사용자 편의성**
+- **최소 입력**: 토큰만 제공하면 모든 것이 자동 설정
+- **유연성**: 기존 Database ID도 직접 지정 가능
+- **안전성**: 민감한 정보는 환경 변수로 관리
+
+## 📋 Database ID 관리 방법
+
+### 1. **환경 변수 기반 (권장)**
 ```bash
 # .env 파일
-NOTION_TOKEN=your_notion_token_here
-NOTION_DATABASE_ID_POSTS=your_database_id_for_posts
+NOTION_DATABASE_ID_POSTS=8a021de7-2bda-434d-b255-d7cc94ebb567
 ```
 
-### 2. YAML 폴백 지원
+### 2. **CLI 인자 기반**
+```bash
+# 직접 Database ID 지정
+python app.py setup --token YOUR_TOKEN --database-id YOUR_DB_ID
+```
 
+### 3. **설정 파일 기반**
 ```yaml
-# notion-hugo.config.yaml
-mount:
-  databases:
-  - target_folder: posts
-    # 환경변수가 없을 때만 사용됩니다
-    # database_id: your_database_id_here
-  manual: true
+# src/config/notion-hugo-config.yaml
+notion:
+  mount:
+    databases:
+      - database_id: "${NOTION_DATABASE_ID_POSTS:-}"
+        target_folder: "posts"
 ```
 
-## 🚀 사용 방법
+## 🔧 Database ID 추출 방법
 
-### 방법 1: 자동 설정 (권장)
+### 1. **Notion URL에서 추출**
+```
+https://notion.so/myworkspace/8a021de7-2bda-434d-b255-d7cc94ebb567
+↑ Database ID: 8a021de7-2bda-434d-b255-d7cc94ebb567
+```
 
+### 2. **자동 추출 스크립트**
 ```bash
-# 개선된 설정 스크립트 사용
-python setup_enhanced.py -i
+# Database ID 자동 추출
+python -c "
+from src.cli_utils import extract_notion_id_from_url
+url = input('Notion URL: ')
+id = extract_notion_id_from_url(url)
+print(f'Database ID: {id}')
+"
 ```
 
-이 방법은:
-- ✅ 자동으로 database_id를 환경변수로 설정
-- ✅ .gitignore에 .env 파일 자동 추가
-- ✅ 배포 환경 자동 설정
-
-### 방법 2: 수동 설정
-
-1. **환경변수 설정**
-   ```bash
-   # .env 파일 생성
-   echo "NOTION_TOKEN=your_token" > .env
-   echo "NOTION_DATABASE_ID_POSTS=your_db_id" >> .env
-   ```
-
-2. **보안 설정**
-   ```bash
-   # .gitignore에 추가
-   echo ".env" >> .gitignore
-   ```
-
-## 🔧 환경변수 명명 규칙
-
-### 폴더명 기반 (권장)
+### 3. **환경 변수 설정**
 ```bash
-NOTION_DATABASE_ID_POSTS=db_id_for_posts
-NOTION_DATABASE_ID_DOCS=db_id_for_docs
-NOTION_DATABASE_ID_NEWS=db_id_for_news
-```
-
-### 인덱스 기반 (여러 데이터베이스용)
-```bash
-NOTION_DATABASE_ID_0=first_database_id
-NOTION_DATABASE_ID_1=second_database_id
-NOTION_DATABASE_ID_2=third_database_id
-```
-
-## 🌐 배포 환경 설정
-
-### Vercel 배포
-
-1. **자동 설정** (setup_enhanced.py 사용)
-   ```bash
-   python setup_enhanced.py --token YOUR_TOKEN --deploy vercel
-   ```
-
-2. **수동 설정**
-   - Vercel 대시보드 → Settings → Environment Variables
-   - `NOTION_TOKEN` 추가
-   - `NOTION_DATABASE_ID_POSTS` 추가
-
-### GitHub Pages 배포
-
-1. **자동 설정** (setup_enhanced.py 사용)
-   ```bash
-   python setup_enhanced.py --token YOUR_TOKEN --deploy github-pages
-   ```
-
-2. **수동 설정**
-   - GitHub 저장소 → Settings → Secrets and variables → Actions
-   - `NOTION_TOKEN` 추가
-   - `NOTION_DATABASE_ID_POSTS` 추가
-
-## 📋 우선순위 처리 로직
-
-시스템은 다음 순서로 database_id를 찾습니다:
-
-1. **환경변수 (폴더명 기반)**: `NOTION_DATABASE_ID_POSTS`
-2. **환경변수 (인덱스 기반)**: `NOTION_DATABASE_ID_0`
-3. **YAML 설정**: `database_id` 필드
-4. **오류**: 모든 방법에서 찾지 못하면 오류 발생
-
-## 🔍 코드 구현
-
-### 개선된 config.py
-
-```python
-# 환경변수에서 ID 찾기 (폴더명 기반 -> 인덱스 기반 -> YAML 폴백)
-database_id = (
-    os.environ.get(f"NOTION_DATABASE_ID_{target_folder.upper()}")
-    or os.environ.get(f"NOTION_DATABASE_ID_{i}")
-    or db_config.get("database_id")
-)
-```
-
-### 로깅 시스템
-
-```python
-# 환경변수 사용 여부 로깅
-if os.environ.get(env_key):
-    print(f"[Info] 환경변수 {env_key}에서 database_id 로드")
-elif os.environ.get(env_key_indexed):
-    print(f"[Info] 환경변수 {env_key_indexed}에서 database_id 로드")
-else:
-    print(f"[Info] YAML 설정에서 database_id 로드")
+# Database ID를 환경 변수로 설정
+echo "NOTION_DATABASE_ID_POSTS=extracted_id" >> .env
 ```
 
 ## 🛡️ 보안 모범 사례
 
-### 1. 로컬 개발
-- ✅ `.env` 파일 사용
-- ✅ `.gitignore`에 `.env` 추가
-- ❌ YAML에 database_id 직접 입력 금지
-
-### 2. 배포 환경
-- ✅ 플랫폼 환경변수 사용 (Vercel, GitHub Actions)
-- ✅ 자동 설정 스크립트 활용
-- ❌ 하드코딩된 값 사용 금지
-
-### 3. 팀 협업
-- ✅ `.env.sample` 파일로 템플릿 제공
-- ✅ 문서화된 환경변수 목록
-- ❌ 실제 값이 포함된 파일 공유 금지
-
-## 📁 파일 구조
-
-```
-project/
-├── .env                          # Git 제외, 로컬 환경변수
-├── .env.sample                   # Git 포함, 템플릿
-├── .gitignore                    # .env 제외 설정
-├── notion-hugo.config.yaml       # 폴백 설정
-├── setup_enhanced.py             # 자동 설정 스크립트
-└── src/
-    └── config.py                 # 개선된 설정 로더
-```
-
-## 🔄 마이그레이션 가이드
-
-### 기존 사용자
-
-1. **백업**
-   ```bash
-   cp notion-hugo.config.yaml notion-hugo.config.yaml.backup
-   ```
-
-2. **환경변수 추출**
-   ```bash
-   # 기존 YAML에서 database_id 확인
-   grep database_id notion-hugo.config.yaml
-   ```
-
-3. **환경변수 설정**
-   ```bash
-   echo "NOTION_DATABASE_ID_POSTS=extracted_id" >> .env
-   ```
-
-4. **YAML 정리**
-   ```yaml
-   # database_id 라인을 주석 처리
-   # database_id: extracted_id
-   ```
-
-### 새 사용자
-
+### 1. **환경 변수 사용**
 ```bash
-# 자동 설정 사용 (권장)
-python setup_enhanced.py -i
+# ✅ 권장: 환경 변수 사용
+NOTION_DATABASE_ID_POSTS=your_db_id
+
+# ❌ 피해야 할 것: 코드에 하드코딩
+database_id = "8a021de7-2bda-434d-b255-d7cc94ebb567"
 ```
 
-## 🎯 장점 요약
+### 2. **Git 무시 설정**
+```bash
+# .gitignore에 추가
+.env
+.env.local
+.env.production
+```
 
-1. **보안 강화**: 민감한 정보가 Git에 노출되지 않음
-2. **원클릭 배포**: 환경변수만 설정하면 자동 배포 가능
-3. **하위 호환성**: 기존 YAML 설정도 계속 작동
-4. **유연성**: 여러 데이터베이스 지원
-5. **자동화**: 설정 스크립트로 완전 자동화
+### 3. **CI/CD 보안**
+```yaml
+# GitHub Actions에서 시크릿 사용
+env:
+  NOTION_DATABASE_ID_POSTS: ${{ secrets.NOTION_DATABASE_ID_POSTS }}
+```
 
-## 🆘 문제 해결
+## 🔄 Database ID 변경 시나리오
 
-### Q: 환경변수가 로드되지 않아요
-A: `.env` 파일이 프로젝트 루트에 있는지 확인하고, `python-dotenv`가 설치되어 있는지 확인하세요.
+### 1. **새 Database 생성**
+```bash
+# 기존 설정 유지하면서 새 Database 생성
+python app.py setup --token YOUR_TOKEN
+# → 새 Database 자동 생성 및 설정
+```
 
-### Q: 배포 환경에서 database_id를 찾을 수 없어요
-A: 배포 플랫폼의 환경변수 설정을 확인하세요. Vercel은 Environment Variables, GitHub Pages는 Secrets에서 설정합니다.
+### 2. **기존 Database 사용**
+```bash
+# 기존 Database ID 지정
+python app.py setup --token YOUR_TOKEN --database-id EXISTING_ID
+# → 기존 Database 사용
+```
 
-### Q: 여러 데이터베이스를 사용하고 싶어요
-A: 폴더명 기반 환경변수를 사용하세요: `NOTION_DATABASE_ID_POSTS`, `NOTION_DATABASE_ID_DOCS` 등
+### 3. **Database 마이그레이션**
+```bash
+# 기존 Database에서 새 Database로 마이그레이션
+python app.py setup --token YOUR_TOKEN --migrate-from OLD_ID
+# → 데이터 마이그레이션 후 새 Database 사용
+```
 
-이 가이드를 통해 database_id를 안전하고 편리하게 관리할 수 있습니다! 🚀
+## 📊 Database ID 검증
+
+### 1. **CLI 검증**
+```bash
+# Database ID 유효성 검사
+python app.py validate
+```
+
+### 2. **수동 검증**
+```python
+from notion_client import Client
+
+notion = Client(auth="your_token")
+try:
+    database = notion.databases.retrieve(database_id="your_db_id")
+    print("✅ Database ID is valid")
+except Exception as e:
+    print(f"❌ Database ID is invalid: {e}")
+```
+
+## 🎯 요약
+
+### **핵심 원칙**
+1. **토큰만으로 시작**: `python app.py setup --token YOUR_TOKEN`
+2. **자동화된 보안**: Database ID 자동 생성 및 관리
+3. **유연한 옵션**: 기존 Database ID도 직접 지정 가능
+4. **환경 변수 우선**: 민감한 정보는 환경 변수로 관리
+
+### **사용 시나리오**
+- **신규 사용자**: 토큰만 제공 → 모든 것이 자동 설정
+- **기존 Database 사용자**: `--database-id` 옵션으로 기존 Database 사용
+- **마이그레이션**: `--migrate-from` 옵션으로 데이터 이전
+
+이제 **토큰만 있어도 Notion → Hugo → GitHub Pages**가 완전히 자동화되었습니다! 🚀

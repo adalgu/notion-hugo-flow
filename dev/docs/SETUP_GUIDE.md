@@ -208,22 +208,91 @@ git push origin main
 ### 브랜치명으로 모드 제어
 
 ```bash
-# 브랜치명에 full-sync 포함 시 자동으로 전체 동기화
-git checkout -b hotfix/full-sync-cache-fix
-git push origin hotfix/full-sync-cache-fix
+# 브랜치명에 키워드가 포함되면 자동으로 full-sync 모드
+git checkout -b feature/full-sync-new-feature
+git push origin feature/full-sync-new-feature
 ```
 
-### 수동 실행
+### 대용량 데이터베이스 처리
 
-GitHub Actions에서 "Run workflow" 버튼 클릭 시 자동으로 full-sync 모드로 실행됩니다.
+수만 개 이상의 페이지가 있는 대용량 데이터베이스를 처리할 때는 특별한 모드를 사용합니다:
 
-### 로컬에서 전체 재빌드
+#### 1. 제한된 마이그레이션 모드 (권장)
 
 ```bash
-# 로컬에서 전체 강제 재빌드 실행
-chmod +x scripts/force-full-rebuild.sh
-./scripts/force-full-rebuild.sh
+# 최대 100개 페이지만 처리하고, 에러 시 fallback
+python app.py sync --large-db
+
+# 최대 50개 페이지만 처리 (설정에서 조정 가능)
+python app.py sync --large-db --dry-run
 ```
+
+**특징:**
+- 기본적으로 최대 100개 페이지만 처리
+- 에러 발생 시 자동으로 기본 동기화 모드로 fallback
+- 진행상황을 10개 단위로 보고
+- 안전하고 빠른 처리
+
+#### 2. 전문 마이그레이션 모드
+
+```bash
+# 제한 없이 모든 페이지를 배치로 처리
+python app.py sync --professional
+
+# 메모리 최적화와 함께 처리
+python app.py sync --professional --dry-run
+```
+
+**특징:**
+- 제한 없이 모든 페이지 처리
+- 배치 단위로 메모리 최적화
+- 대용량 데이터베이스에 최적화된 처리
+- 진행상황을 배치 단위로 보고
+
+#### 3. 설정 파일에서 조정
+
+`notion-hugo.config.yaml`에서 대용량 데이터베이스 설정을 조정할 수 있습니다:
+
+```yaml
+sync:
+  large_database:
+    enable_limited_migration: true
+    max_pages_limited: 100        # 제한된 처리할 최대 페이지 수
+    enable_fallback: true         # 에러 시 fallback 활성화
+    timeout_large_db: 300         # 타임아웃 (초)
+    progress_interval: 10         # 진행상황 보고 간격
+    
+  professional_migration:
+    enable_unlimited: true
+    batch_size_pro: 50            # 전문 모드 배치 크기
+    parallel_processing: false    # 병렬 처리 (향후 기능)
+    memory_optimization: true     # 메모리 최적화
+```
+
+### 처리 모드 선택 가이드
+
+| 상황 | 권장 모드 | 명령어 |
+|------|-----------|--------|
+| 일반적인 업데이트 | Incremental | `python app.py sync` |
+| 전체 재빌드 | Full | `python app.py sync --full` |
+| 대용량 DB (안전) | Limited | `python app.py sync --large-db` |
+| 대용량 DB (전체) | Professional | `python app.py sync --professional` |
+| 테스트/검증 | Dry Run | `python app.py sync --dry-run` |
+
+### 에러 처리 및 Fallback
+
+대용량 데이터베이스 처리 중 에러가 발생하면:
+
+1. **제한된 마이그레이션 모드**: 자동으로 기본 동기화 모드로 fallback
+2. **전문 마이그레이션 모드**: 에러 발생 시 중단하고 상세한 에러 정보 제공
+3. **모든 모드**: 진행상황과 에러 로그를 상세히 기록
+
+### 성능 최적화 팁
+
+1. **메모리 사용량**: 전문 모드에서는 메모리 최적화를 활성화
+2. **배치 크기**: 데이터베이스 크기에 따라 배치 크기 조정
+3. **타임아웃**: 대용량 데이터베이스의 경우 타임아웃을 늘려서 설정
+4. **진행상황 모니터링**: 로그를 통해 처리 진행상황 확인
 
 ## 문제 해결 도구
 
