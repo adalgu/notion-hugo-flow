@@ -196,7 +196,7 @@ class ConfigValidator:
         if posts_dir.exists():
             md_files = list(posts_dir.glob("*.md"))
             if not md_files:
-                print_warning("No posts found in content/posts/")
+                print_warning("No posts found in blog/content/posts/")
 
     def _check_notion_setup(self):
         """Check Notion API setup"""
@@ -258,7 +258,7 @@ class ConfigValidator:
         fixes = 0
 
         # Create missing directories
-        dirs_to_create = ["content/posts", "themes", "static", "layouts"]
+        dirs_to_create = ["blog/content/posts", "blog/themes", "blog/static", "blog/layouts"]
 
         for dir_name in dirs_to_create:
             dir_path = self.project_root / dir_name

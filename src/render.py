@@ -317,8 +317,15 @@ def save_page(
             print(f"[Info] 페이지 {page_id} 건너뜀: PropertyMapper에서 빈 속성 반환")
             return ""
 
-        # 대상 디렉토리 및 파일 경로 설정
-        target_dir = f"content/{target_folder}"
+        # 대상 디렉토리 및 파일 경로 설정 - Hugo 디렉토리 구조 사용
+        try:
+            from .config import ConfigManager
+            config_manager = ConfigManager()
+            hugo_content_path = config_manager.get_hugo_content_path()
+            target_dir = f"{hugo_content_path}/{target_folder}"
+        except Exception:
+            # Fallback to blog/content structure
+            target_dir = f"blog/content/{target_folder}"
         ensure_directory(target_dir)
 
         # 파일명 생성 (설정에 따라 UUID 또는 다른 형식)

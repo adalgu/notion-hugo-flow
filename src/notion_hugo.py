@@ -470,7 +470,7 @@ def batch_process_pages_with_metadata(
                     page_id,
                     status="success",
                     last_edited=last_edited,
-                    target_path=f"content/{target_folder}/{page_id}.md",
+                    target_path=f"blog/content/{target_folder}/{page_id}.md",
                     hash=metadata.compute_content_hash(content),
                 )
             else:
@@ -1150,12 +1150,15 @@ def run_interactive_setup() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
+def run_quick_setup(
+    target_folder: str = "posts", skip_sample_posts: bool = False
+) -> Dict[str, Any]:
     """
     원스톱 빠른 설정을 실행합니다.
 
     Args:
         target_folder: 대상 폴더
+        skip_sample_posts: 샘플 포스트 생성 건너뛰기
 
     Returns:
         설정 결과
@@ -1186,7 +1189,7 @@ def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
         setup = NotionSetup(setup_config)
 
         # 원스톱 설정 실행
-        result = setup.quick_setup(target_folder)
+        result = setup.quick_setup(target_folder, skip_sample_posts)
 
         if result["success"]:
             print_success("원스톱 설정이 완료되었습니다!")

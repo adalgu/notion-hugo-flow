@@ -1,0 +1,51 @@
+# Hugo Pipeline Configuration Template  
+# Copy this file and customize for your Hugo site
+
+hugo:
+  # Directory configuration
+  content_dir: "blog/content"
+  static_dir: "blog/static"
+  layouts_dir: "blog/layouts"
+  output_dir: "blog/public"
+  
+  # Hugo site configuration
+  config_file: "blog/config.yaml"
+  theme: "PaperMod"
+  base_url: "http://localhost:1313"
+  
+  # Build configuration
+  build_mode: "production"  # "production" | "development"
+  minify: true
+  enable_git_info: true
+  build_drafts: false
+  build_future: false
+  
+  # Performance configuration
+  build_timeout: 60  # seconds
+  max_parallel: 4
+  
+  # Development server configuration
+  server:
+    port: 1313
+    host: "localhost"
+    watch: true
+    live_reload: true
+    
+  # Theme configuration
+  theme_config:
+    auto_detect: true  # Auto-detect theme location
+    preferred_locations:
+      - "blog/themes"
+      - "themes"
+      - "blog/PaperMod"  # For submodule themes
+    
+  # Build optimization
+  optimization:
+    minify_html: true
+    minify_css: true
+    minify_js: true
+    optimize_images: false  # Requires additional tools
+    
+  # Error handling
+  build_strict: false  # Fail on warnings
+  ignore_cache: false  # Ignore Hugo cache

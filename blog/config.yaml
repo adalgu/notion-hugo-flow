@@ -1,0 +1,44 @@
+baseURL: https://gunn.kim
+languageCode: en
+title: Exobrain
+theme: PaperMod
+
+params:
+  env: production
+  default_theme: auto
+  show_reading_time: true
+  show_share_buttons: true
+  show_post_nav_links: true
+  show_breadcrumbs: true
+  show_code_copy_buttons: true
+  show_word_count: true
+  show_toc: false
+  disable_theme_toggle: false
+
+menu:
+  main:
+  - name: posts
+    url: /posts/
+    weight: 5
+  - name: tags
+    url: /tags/
+    weight: 20
+
+markup:
+  goldmark:
+    extensions:
+      definition_list: true
+      footnote: true
+      linkify: true
+      strikethrough: true
+      table: true
+      task_list: true
+      typographer: true
+    parser:
+      auto_heading_id: true
+      auto_heading_id_type: github
+    renderer:
+      unsafe: true
+
+permalinks:
+  posts: /posts/:slug/

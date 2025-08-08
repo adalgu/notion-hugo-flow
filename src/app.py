@@ -43,6 +43,7 @@ from .notion_hugo import (
     validate_hugo_build,
 )
 from .config import ConfigManager, diagnose_configuration
+from .hugo_setup import HugoSetup, ensure_hugo_setup
 from .cli_utils import (
     print_header,
     print_success,
@@ -70,7 +71,7 @@ def run_enhanced_quick_setup(
     """
     try:
         # Use existing quick setup
-        result = run_quick_setup(target_folder)
+        result = run_quick_setup(target_folder, skip_sample_posts)
 
         if result.get("success") and not skip_sample_posts:
             database_id = result.get("database_id")
@@ -78,13 +79,20 @@ def run_enhanced_quick_setup(
                 print_info("Generating sample blog posts...")
                 sample_result = generate_sample_posts(database_id)
                 if sample_result.get("success"):
-                    print_success(
-                        f"Created {sample_result.get('count', 0)} sample posts"
-                    )
+                    count = sample_result.get("count", 0)
+                    method = sample_result.get("method", "unknown")
+                    if method == "notion_api":
+                        print_success(f"✅ Created {count} sample posts in Notion database")
+                    elif method == "local_markdown":
+                        print_success(f"✅ Created {count} sample posts as local markdown files")
+                        location = sample_result.get("location", "blog/content/posts")
+                        print_info(f"📁 Sample files location: {location}")
+                        print_info("💡 These posts will appear in your Hugo build")
+                    else:
+                        print_success(f"✅ Created {count} sample posts")
                 else:
-                    print_warning(
-                        "Sample post generation failed, but database is ready"
-                    )
+                    print_warning("⚠️ Sample post generation failed, but database is ready")
+                    print_info("💡 You can create posts manually in your Notion database")
 
         return result
     except Exception as e:
@@ -93,7 +101,44 @@ def run_enhanced_quick_setup(
 
 def generate_sample_posts(database_id: str) -> Dict[str, Any]:
     """
-    Generate sample blog posts in the Notion database.
+    Generate sample blog posts - fallback to local markdown if API fails.
+    
+    This function tries to create sample posts in Notion first, but falls back
+    to creating local markdown files if the API encounters issues like
+    'Nested block depth exceeded' error.
+
+    Args:
+        database_id: The database ID to add sample posts to
+
+    Returns:
+        Result dictionary with success status and count
+    """
+    try:
+        # First try API creation with minimal structure
+        print_info("Attempting to create sample posts in Notion database...")
+        return create_simple_notion_samples(database_id)
+    except Exception as e:
+        error_msg = str(e)
+        if "Nested block depth exceeded" in error_msg or "depth" in error_msg.lower():
+            print_warning("⚠️ API sample creation failed due to depth limitations...")
+            print_info("📝 Falling back to local markdown file creation...")
+            return create_local_markdown_samples(database_id)
+        elif "Invalid" in error_msg or "Unauthorized" in error_msg:
+            print_warning("⚠️ API access issue detected...")
+            print_info("📝 Falling back to local markdown file creation...")
+            return create_local_markdown_samples(database_id)
+        else:
+            print_warning(f"⚠️ Unexpected API error: {error_msg}")
+            print_info("📝 Falling back to local markdown file creation...")
+            return create_local_markdown_samples(database_id)
+
+
+def create_simple_notion_samples(database_id: str) -> Dict[str, Any]:
+    """
+    Create very simple Notion samples to avoid depth issues.
+    
+    This function creates sample posts with minimal structure - no children blocks,
+    only the essential properties to avoid triggering Notion API depth limits.
 
     Args:
         database_id: The database ID to add sample posts to
@@ -109,67 +154,12 @@ def generate_sample_posts(database_id: str) -> Dict[str, Any]:
         sample_posts = [
             {
                 "title": "Welcome to Your New Blog!",
-                "content": """# Welcome to Your Notion-Hugo Blog!
-
-🎉 Congratulations! You've successfully set up your Notion-Hugo blog. This is your first sample post to help you get started.
-
-## What you've accomplished:
-- ✅ Created a Notion database for your blog posts
-- ✅ Set up automatic synchronization with Hugo
-- ✅ Configured deployment to GitHub Pages
-- ✅ Generated this sample content
-
-## Getting Started:
-1. **Edit this post** - Change the title and content to make it your own
-2. **Create new posts** - Add new pages to your Notion database
-3. **Publish content** - Set the Status to "Published" to make posts live
-4. **Customize your site** - Edit the Hugo configuration as needed
-
-## Next Steps:
-- Replace this content with your own introduction
-- Set up your site's branding and theme
-- Start writing amazing content!
-
-Your blog will automatically sync and deploy when you publish new content in Notion. Happy blogging! 🚀""",
+                "description": "Your first sample post to get started with Notion-Hugo",
                 "tags": ["Welcome", "Getting Started", "Tutorial"],
             },
             {
                 "title": "How to Use Your Notion-Hugo Blog",
-                "content": """# Managing Your Blog with Notion
-
-Your blog is now powered by Notion as a CMS and Hugo as a static site generator. Here's how to make the most of it:
-
-## Creating New Posts
-1. Open your Notion database
-2. Click "New" to create a new page
-3. Fill in the title and content
-4. Set the Status to "Published" when ready
-5. Your blog will automatically update!
-
-## Post Properties
-Your database has several properties to help organize your content:
-
-- **Title**: The post title (appears in URLs and headings)
-- **Status**: Controls publication (Draft/Published)
-- **Tags**: Categorize your content
-- **Category**: Group related posts
-- **Created**: Automatically tracked
-- **Updated**: Shows last modification
-
-## Content Tips
-- Use Notion's rich text formatting
-- Add images, code blocks, and other media
-- Organize content with headings and lists
-- Use callouts for important information
-
-## Publishing Workflow
-1. Write your post in Notion
-2. Review and edit as needed
-3. Change Status from "Draft" to "Published"
-4. Wait a few minutes for automatic deployment
-5. Check your live site!
-
-Your blog is now ready for amazing content! 📝""",
+                "description": "Learn how to manage your blog with Notion as CMS",
                 "tags": ["Tutorial", "Notion", "Workflow"],
             },
         ]
@@ -177,7 +167,7 @@ Your blog is now ready for amazing content! 📝""",
         created_count = 0
         for post_data in sample_posts:
             try:
-                # Create a new page in the database
+                # Create a new page with minimal structure - NO children blocks
                 new_page = notion.pages.create(
                     parent={"database_id": database_id},
                     properties={
@@ -189,7 +179,7 @@ Your blog is now ready for amazing content! 📝""",
                             "rich_text": [
                                 {
                                     "text": {
-                                        "content": f"Sample blog post: {post_data['title']}"
+                                        "content": post_data["description"]
                                     }
                                 }
                             ]
@@ -201,34 +191,212 @@ Your blog is now ready for amazing content! 📝""",
                         "featured": {"checkbox": False},
                         "ShowToc": {"checkbox": True},
                         "HideSummary": {"checkbox": False},
-                    },
-                    children=[
-                        {
-                            "object": "block",
-                            "type": "paragraph",
-                            "paragraph": {
-                                "rich_text": [
-                                    {
-                                        "type": "text",
-                                        "text": {"content": post_data["content"]},
-                                    }
-                                ]
-                            },
-                        }
-                    ],
+                    }
+                    # NO children parameter - this avoids depth issues
                 )
                 created_count += 1
-                print_info(f"Created sample post: {post_data['title']}")
+                print_success(f"✅ Created simple sample post: {post_data['title']}")
 
             except Exception as e:
                 print_warning(
                     f"Failed to create sample post '{post_data['title']}': {str(e)}"
                 )
+                raise  # Re-raise to trigger fallback
 
-        return {"success": True, "count": created_count}
+        return {"success": True, "count": created_count, "method": "notion_api"}
 
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        print_warning(f"Simple Notion sample creation failed: {str(e)}")
+        raise  # Re-raise to trigger fallback
+
+
+def create_local_markdown_samples(database_id: str) -> Dict[str, Any]:
+    """
+    Create sample posts as local markdown files.
+    
+    This function creates sample blog posts directly as markdown files
+    in the content/posts directory, bypassing Notion API limitations.
+    This ensures users always get sample content even if API fails.
+
+    Args:
+        database_id: The database ID (for reference in frontmatter)
+
+    Returns:
+        Result dictionary with success status and count
+    """
+    try:
+        from pathlib import Path
+        import os
+        from datetime import datetime
+        
+        # Get correct Hugo content path from ConfigManager
+        try:
+            config_manager = ConfigManager()
+            hugo_content_path = config_manager.get_hugo_content_path()
+            content_dir = Path(hugo_content_path) / "posts"
+        except Exception:
+            # Fallback to blog/content/posts if ConfigManager fails
+            content_dir = Path("blog/content/posts")
+        
+        # Ensure directory exists
+        content_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Sample post data with Hugo frontmatter
+        sample_posts = [
+            {
+                "filename": "welcome-to-your-new-blog.md",
+                "title": "Welcome to Your New Blog!",
+                "description": "Your first sample post to get started with Notion-Hugo",
+                "tags": ["Welcome", "Getting Started", "Tutorial"],
+                "content": """# Welcome to Your Notion-Hugo Blog!
+
+🎉 Congratulations! You've successfully set up your Notion-Hugo blog. This is your first sample post to help you get started.
+
+## What you've accomplished:
+
+- ✅ Created a Notion database for your blog posts
+- ✅ Set up automatic synchronization with Hugo
+- ✅ Configured deployment pipeline
+- ✅ Generated sample content (this post!)
+
+## Getting Started:
+
+1. **Edit this post** - Change the title and content to make it your own
+2. **Create new posts** - Add new pages to your Notion database
+3. **Publish content** - Set the Status to "Published" to make posts live
+4. **Customize your site** - Edit the Hugo configuration as needed
+
+## Next Steps:
+
+- Replace this content with your own introduction
+- Set up your site's branding and theme
+- Start writing amazing content!
+- Connect your Notion database for dynamic content
+
+Your blog will automatically sync and deploy when you publish new content in Notion. Happy blogging! 🚀
+
+> **Note**: This sample post was created locally due to API limitations. Once you sync with Notion, you can manage all content through your Notion database."""
+            },
+            {
+                "filename": "how-to-use-your-notion-hugo-blog.md",
+                "title": "How to Use Your Notion-Hugo Blog",
+                "description": "Learn how to manage your blog with Notion as CMS",
+                "tags": ["Tutorial", "Notion", "Workflow"],
+                "content": """# Managing Your Blog with Notion
+
+Your blog is now powered by Notion as a CMS and Hugo as a static site generator. Here's how to make the most of it:
+
+## Creating New Posts
+
+1. Open your Notion database
+2. Click "New" to create a new page
+3. Fill in the title and content
+4. Set the Status to "Published" when ready
+5. Your blog will automatically update!
+
+## Post Properties
+
+Your database has several properties to help organize your content:
+
+- **Title**: The post title (appears in URLs and headings)
+- **Status**: Controls publication (Draft/Published)
+- **Tags**: Categorize your content
+- **Category**: Group related posts
+- **Created**: Automatically tracked
+- **Updated**: Shows last modification
+
+## Content Tips
+
+- Use Notion's rich text formatting
+- Add images, code blocks, and other media
+- Organize content with headings and lists
+- Use callouts for important information
+
+## Publishing Workflow
+
+1. Write your post in Notion
+2. Review and edit as needed
+3. Change Status from "Draft" to "Published"
+4. Wait a few minutes for automatic deployment
+5. Check your live site!
+
+## Syncing Content
+
+To sync your Notion content:
+
+```bash
+python app.py sync
+```
+
+To build and serve locally:
+
+```bash
+python app.py build --serve
+```
+
+Your blog is now ready for amazing content! 📝
+
+> **Tip**: This sample post demonstrates various markdown features. Edit or delete it once you're comfortable with the workflow."""
+            }
+        ]
+        
+        created_count = 0
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        
+        for post_data in sample_posts:
+            try:
+                filename = f"{current_date}-{post_data['filename']}"
+                file_path = content_dir / filename
+                
+                # Skip if file already exists
+                if file_path.exists():
+                    print_info(f"📄 Sample post already exists: {filename}")
+                    created_count += 1
+                    continue
+                
+                # Create Hugo frontmatter
+                frontmatter = f"""---
+title: "{post_data['title']}"
+date: {current_date}T{datetime.now().strftime('%H:%M:%S')}+09:00
+draft: false
+description: "{post_data['description']}"
+tags: {post_data['tags']}
+categories: ["Tutorial"]
+showToc: true
+hideSummary: false
+# Notion reference
+notion_database_id: "{database_id}"
+created_method: "local_fallback"
+---
+
+"""
+                
+                # Write the complete markdown file
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(frontmatter + post_data["content"])
+                
+                created_count += 1
+                print_success(f"✅ Created local sample post: {filename}")
+                
+            except Exception as e:
+                print_warning(
+                    f"Failed to create local sample post '{post_data['filename']}': {str(e)}"
+                )
+        
+        if created_count > 0:
+            print_info(f"📁 Sample posts created in: {content_dir.absolute()}")
+            print_info("🔄 Run 'python app.py build' to see them in your site")
+        
+        return {
+            "success": True, 
+            "count": created_count, 
+            "method": "local_markdown",
+            "location": str(content_dir.absolute())
+        }
+    
+    except Exception as e:
+        print_error(f"Local markdown sample creation failed: {str(e)}")
+        return {"success": False, "error": str(e), "method": "local_markdown"}
 
 
 def setup_configuration(
@@ -350,6 +518,20 @@ Thumbs.db
             with open(".gitignore", "w", encoding="utf-8") as f:
                 f.write(gitignore_content)
             print_info("✅ Created .gitignore file to protect sensitive data")
+
+        # Ensure Hugo site setup
+        print_info("🏗️ Setting up Hugo site structure...")
+        try:
+            config_manager = ConfigManager()
+            if ensure_hugo_setup(config_manager):
+                print_info("✅ Hugo site structure ready")
+            else:
+                print_warning("⚠️  Hugo site setup had issues, but continuing...")
+        except Exception as e:
+            print_warning(f"⚠️  Hugo setup failed: {str(e)}")
+            print_info(
+                "Continuing without Hugo setup - you may need to initialize manually"
+            )
 
         # Validate the configuration
         try:
@@ -685,23 +867,74 @@ app = NotionHugoApp()
 
 
 @click.group(invoke_without_command=True)
+@click.option("--token", help="Notion API token (auto-triggers setup)")
 @click.option("--version", is_flag=True, help="Show version information")
 @click.pass_context
-def cli(ctx: click.Context, version: bool) -> None:
+def cli(ctx: click.Context, token: Optional[str], version: bool) -> None:
     """
     Notion-Hugo Integration CLI - Modern blog publishing with Notion as CMS.
 
     Convert Notion pages to Hugo markdown and deploy static sites automatically.
     Perfect for developers who want to use Notion as their blog CMS.
+
+    Quick start:
+        python app.py --token YOUR_NOTION_TOKEN    # Auto setup with token
+        python app.py                              # Interactive setup
     """
     if version:
         click.echo("Notion-Hugo CLI v1.0.0")
         return
 
     if ctx.invoked_subcommand is None:
-        # Show help if no command is provided
-        click.echo(ctx.get_help())
-        ctx.exit()
+        # No subcommand provided
+        if token:
+            # Token provided - start automatic setup
+            print_info("🚀 Token provided - starting automatic setup...")
+            ctx.invoke(setup, token=token)
+            return
+        else:
+            # No token - start interactive setup
+            print_header("🚀 Welcome to Notion-Hugo!")
+            print_info("Let's get your blog set up in just a few minutes.")
+            print_info("We'll guide you through the process step by step.")
+            print()
+
+            # Interactive token input
+            token_input = None
+            while not token_input:
+                try:
+                    print_info("First, we need your Notion API token.")
+                    print_info(
+                        "📚 Don't have one? Get it here: https://www.notion.so/my-integrations"
+                    )
+                    print()
+
+                    token_input = input("🔑 Enter your Notion API token: ").strip()
+
+                    if not token_input:
+                        print_warning("Token cannot be empty. Please try again.")
+                        continue
+
+                    if not token_input.startswith(("ntn_", "secret_")):
+                        print_warning("⚠️ Token should start with 'ntn_' or 'secret_'")
+                        retry = input("Continue anyway? (y/n): ").lower().strip()
+                        if retry not in ["y", "yes"]:
+                            token_input = None
+                            continue
+
+                    break
+
+                except KeyboardInterrupt:
+                    print_info("\n🛑 Setup cancelled by user")
+                    ctx.exit(130)
+                except EOFError:
+                    print_info("\n🛑 Setup cancelled by user")
+                    ctx.exit(130)
+
+            # Start setup with the provided token
+            print_info("✅ Token received - starting setup...")
+            ctx.invoke(setup, token=token_input)
+            return
 
 
 @cli.command()
@@ -1356,7 +1589,9 @@ def setup(
             print_info(
                 f"🔗 Database URL: https://notion.so/{database_id.replace('-', '')}"
             )
-            print_info(f"📁 Content folder: blog/content/{target_folder}/")
+            config_manager = ConfigManager()
+            content_path = Path(config_manager.get_hugo_content_path()) / target_folder
+            print_info(f"📁 Content folder: {content_path}/")
             print_info(f"⚙️  Config file: src/config/notion-hugo-config.yaml")
             print_info(f"🔐 Environment file: .env")
 
@@ -2083,17 +2318,18 @@ def validate(fix: bool, github: bool) -> None:
             print_info("💡 To fix: Install Hugo from https://gohugo.io/installation/")
 
     # Check Hugo theme
-    theme_dir = Path("blog/themes/PaperMod")
+    config_manager = ConfigManager()
+    theme_dir = Path(config_manager.get_theme_path())
     if not theme_dir.exists():
-        warnings.append("PaperMod theme not found")
-        print_warning("⚠️ PaperMod theme not found")
+        warnings.append("Hugo theme not found")
+        print_warning("⚠️ Hugo theme not found")
         if fix:
             print_info("💡 To fix: Run 'git submodule update --init --recursive'")
     else:
-        print_success("✅ PaperMod theme found")
+        print_success("✅ Hugo theme found")
 
     # Check content directory
-    content_dir = Path("blog/content/posts")
+    content_dir = Path(config_manager.get_hugo_content_path()) / "posts"
     if not content_dir.exists():
         warnings.append("Content directory not found")
         print_warning("⚠️ Content directory not found")

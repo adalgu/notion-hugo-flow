@@ -901,6 +901,32 @@ SECURITY_ENVIRONMENT_VARIABLES_VALIDATE_ENV_VARS=true
         theme_name = config.get("hugo", {}).get("theme", {}).get("name", "PaperMod")
         return os.path.join(dirs["root"], dirs["themes"], theme_name)
 
+    def save_config(self, config: Dict[str, Any]) -> None:
+        """Save configuration to file.
+
+        Args:
+            config: Configuration dictionary to save.
+        """
+        try:
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
+
+            # Save configuration to YAML file
+            with open(self.config_path, "w", encoding="utf-8") as f:
+                yaml.dump(
+                    config,
+                    f,
+                    default_flow_style=False,
+                    allow_unicode=True,
+                    sort_keys=False,
+                )
+
+            print(f"✅ Configuration saved: {self.config_path}")
+
+        except Exception as e:
+            print(f"❌ Failed to save configuration: {e}")
+            raise
+
 
 # Convenience functions for backward compatibility
 def load_config() -> LegacyConfig:

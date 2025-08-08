@@ -221,7 +221,7 @@ class NotionSetup:
                     f"지정된 부모 페이지 '{self.parent_page_id}'에 접근할 수 없습니다."
                 )
 
-        # 2. 워크스페이스 루트 레벨 페이지 찾기
+        # 2. 워크스페이스 루트 레벨 페이지 찾기 (최우선)
         root_pages = []
         for page in accessible_pages:
             parent = page.get("parent", {})
@@ -229,32 +229,209 @@ class NotionSetup:
                 root_pages.append(page)
 
         if root_pages:
-            # 첫 번째 루트 페이지 사용
-            selected_page = root_pages[0]
-            print(f"워크스페이스 루트 페이지 사용: {selected_page['title']}")
-            return selected_page["id"]
+            # 루트 페이지 중에서도 샘플 페이지가 아닌 것 우선 선택
+            non_sample_pages = []
+            sample_keywords = [
+                "welcome",
+                "how to use",
+                "sample",
+                "getting started",
+                "tutorial",
+            ]
 
-        # 3. 가장 적합한 페이지 선택 (제목 기준)
+            for page in root_pages:
+                title_lower = page["title"].lower()
+                is_sample = any(keyword in title_lower for keyword in sample_keywords)
+                if not is_sample:
+                    non_sample_pages.append(page)
+
+            if non_sample_pages:
+                selected_page = non_sample_pages[0]
+                print(
+                    f"워크스페이스 루트 페이지 사용 (비샘플): {selected_page['title']}"
+                )
+                return selected_page["id"]
+            else:
+                # 모든 루트 페이지가 샘플이면 첫 번째 것 사용
+                selected_page = root_pages[0]
+                print(f"워크스페이스 루트 페이지 사용: {selected_page['title']}")
+                return selected_page["id"]
+
+        # 3. 루트가 없으면 가장 깊이가 낮은 페이지 선택 (깊이 제한 적용)
         if accessible_pages:
-            # "Blog", "Posts", "Content" 등의 키워드가 있는 페이지 우선
-            blog_keywords = ["blog", "post", "content", "article", "write"]
+            max_allowed_depth = 3  # 최대 허용 깊이 (Notion API 제한 고려)
 
-            for keyword in blog_keywords:
-                for page in accessible_pages:
-                    if keyword.lower() in page["title"].lower():
-                        print(f"블로그 관련 페이지 발견, 사용: {page['title']}")
+            # 페이지 깊이 계산 및 필터링
+            pages_with_depth = []
+            for page in accessible_pages:
+                depth = self._calculate_page_depth(page)
+                if depth <= max_allowed_depth:
+                    pages_with_depth.append((page, depth))
+                else:
+                    print(
+                        f"깊이 제한으로 제외된 페이지: {page['title']} (깊이: {depth})"
+                    )
+
+            if not pages_with_depth:
+                print(
+                    f"⚠️ 모든 페이지가 최대 허용 깊이({max_allowed_depth})를 초과합니다."
+                )
+            else:
+                # 깊이 순으로 정렬 (낮은 깊이 우선)
+                pages_with_depth.sort(key=lambda x: x[1])
+
+                # 가장 얕은 페이지들 중에서 샘플이 아닌 것 선택
+                min_depth = pages_with_depth[0][1]
+                shallow_pages = [
+                    page for page, depth in pages_with_depth if depth == min_depth
+                ]
+
+                sample_keywords = [
+                    "welcome",
+                    "how to use",
+                    "sample",
+                    "getting started",
+                    "tutorial",
+                ]
+                for page in shallow_pages:
+                    title_lower = page["title"].lower()
+                    is_sample = any(
+                        keyword in title_lower for keyword in sample_keywords
+                    )
+                    if not is_sample:
+                        print(
+                            f"얕은 깊이의 비샘플 페이지 사용: {page['title']} (깊이: {min_depth})"
+                        )
                         return page["id"]
 
-            # 키워드가 없으면 첫 번째 페이지 사용
-            selected_page = accessible_pages[0]
-            print(f"기본 페이지 사용: {selected_page['title']}")
-            return selected_page["id"]
+                # 모든 얕은 페이지가 샘플이면 첫 번째 것 사용
+                selected_page = shallow_pages[0]
+                print(
+                    f"얕은 깊이 페이지 사용: {selected_page['title']} (깊이: {min_depth})"
+                )
+                return selected_page["id"]
 
-        # 4. 접근 가능한 페이지가 없으면 오류
+        # 4. 새로운 데이터베이스 전용 페이지 생성 시도
+        try:
+            print("새로운 데이터베이스 전용 페이지를 생성합니다...")
+            new_page = self._create_root_page_for_database()
+            if new_page:
+                print(
+                    f"✅ 데이터베이스 전용 페이지 생성됨: {self._extract_page_title(new_page)}"
+                )
+                return new_page["id"]
+        except Exception as e:
+            print(f"❌ 새 페이지 생성 실패: {str(e)}")
+
+        # 5. 모든 방법이 실패하면 오류
         raise ValueError(
             "데이터베이스를 생성할 수 있는 페이지가 없습니다. "
-            "통합(integration)에 최소 하나의 페이지를 공유하세요."
+            "통합(integration)에 최소 하나의 페이지를 공유하거나 워크스페이스 콘텐츠 생성 권한을 부여하세요."
         )
+
+    def _calculate_page_depth(self, page: Dict[str, Any]) -> int:
+        """
+        페이지의 깊이를 계산합니다.
+
+        Args:
+            page: 페이지 객체
+
+        Returns:
+            페이지 깊이 (워크스페이스 루트는 0)
+        """
+        depth = 0
+        current_page = page
+        visited_pages = set()  # 순환 참조 방지
+        max_depth = 10  # 최대 깊이 제한 (Notion API 제한 고려)
+
+        while current_page and "parent" in current_page:
+            parent = current_page.get("parent", {})
+            parent_type = parent.get("type")
+
+            # 페이지 ID 추적하여 순환 참조 방지
+            page_id = current_page.get("id")
+            if page_id and page_id in visited_pages:
+                print(f"⚠️ 순환 참조 감지됨: {page_id}")
+                break
+            if page_id:
+                visited_pages.add(page_id)
+
+            if parent_type == "workspace":
+                # 워크스페이스 루트에 도달
+                break
+            elif parent_type == "page_id":
+                # 부모 페이지가 있으면 깊이 증가
+                depth += 1
+
+                # 최대 깊이 제한 확인
+                if depth >= max_depth:
+                    print(f"⚠️ 최대 깊이 제한({max_depth})에 도달했습니다.")
+                    break
+
+                try:
+                    # 부모 페이지 정보 가져오기
+                    parent_id = parent.get("page_id")
+                    if parent_id:
+                        current_page = self._retry_api_call(
+                            self.notion.pages.retrieve, page_id=parent_id
+                        )
+                    else:
+                        break
+                except Exception as e:
+                    print(f"부모 페이지 조회 실패 (깊이 {depth}): {str(e)}")
+                    break
+            else:
+                # 다른 타입의 부모 (database_id 등)
+                break
+
+        return depth
+
+    def _create_root_page_for_database(self) -> Optional[Dict[str, Any]]:
+        """
+        데이터베이스 생성을 위한 새로운 루트 페이지를 생성합니다.
+
+        Returns:
+            생성된 페이지 객체 또는 None
+        """
+        try:
+            # 고유한 페이지 제목 생성 (타임스탬프 포함)
+            from datetime import datetime
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            page_title = f"Blog Hub {timestamp}"
+
+            # 워크스페이스 루트에 새 페이지 생성
+            new_page = self._retry_api_call(
+                self.notion.pages.create,
+                parent={"type": "workspace"},
+                properties={
+                    "title": {
+                        "title": [{"type": "text", "text": {"content": page_title}}]
+                    }
+                },
+                children=[
+                    {
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [
+                                {
+                                    "type": "text",
+                                    "text": {
+                                        "content": "This page contains your Hugo blog database. You can safely rename this page or add content above the database."
+                                    },
+                                }
+                            ]
+                        },
+                    }
+                ],
+            )
+
+            return new_page
+
+        except Exception as e:
+            print(f"루트 페이지 생성 중 오류: {str(e)}")
+            return None
 
     def _get_common_database_properties(self) -> Dict[str, Any]:
         """
@@ -472,17 +649,17 @@ class NotionSetup:
             "linkTitle": {"rich_text": [{"text": {"content": "시작하기"}}]},
         }
 
-        # 페이지 콘텐츠 블록 정의
+        # 페이지 콘텐츠 블록 정의 (간단한 구조로 변경)
         children = [
             {
                 "object": "block",
-                "type": "heading_1",
-                "heading_1": {
+                "type": "paragraph",
+                "paragraph": {
                     "rich_text": [
                         {
                             "type": "text",
                             "text": {
-                                "content": "첫 번째 블로그 포스트에 오신 것을 환영합니다!"
+                                "content": "Welcome to your first blog post! This is a sample post created by the Notion-Hugo setup."
                             },
                         }
                     ]
@@ -496,89 +673,10 @@ class NotionSetup:
                         {
                             "type": "text",
                             "text": {
-                                "content": "Notion을 CMS로 사용하고 Hugo로 정적 사이트를 생성하는 블로그 시스템을 시작했습니다."
+                                "content": "You can edit this post in Notion and it will automatically sync to your Hugo site."
                             },
                         }
                     ]
-                },
-            },
-            {
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [
-                        {"type": "text", "text": {"content": "Notion에서 작성하기"}}
-                    ]
-                },
-            },
-            {
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": "이 데이터베이스에 새 페이지를 추가하여 블로그 포스트를 작성할 수 있습니다. 'isPublished' 속성을 체크하면 Hugo 사이트에 게시됩니다."
-                            },
-                        }
-                    ]
-                },
-            },
-            {
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [
-                        {"type": "text", "text": {"content": "마크다운 지원"}}
-                    ]
-                },
-            },
-            {
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": "Notion은 마크다운 형식을 지원합니다. "
-                            },
-                        },
-                        {
-                            "type": "text",
-                            "text": {"content": "굵은 텍스트"},
-                            "annotations": {"bold": True},
-                        },
-                        {"type": "text", "text": {"content": ", "}},
-                        {
-                            "type": "text",
-                            "text": {"content": "기울임꼴"},
-                            "annotations": {"italic": True},
-                        },
-                        {"type": "text", "text": {"content": ", 그리고 "}},
-                        {
-                            "type": "text",
-                            "text": {"content": "코드 블록"},
-                            "annotations": {"code": True},
-                        },
-                        {"type": "text", "text": {"content": "도 사용할 수 있습니다."}},
-                    ]
-                },
-            },
-            {
-                "object": "block",
-                "type": "code",
-                "code": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {
-                                "content": "// 코드 예제\nfunction greeting() {\n  console.log('안녕하세요, Notion + Hugo!');\n}"
-                            },
-                        }
-                    ],
-                    "language": "javascript",
                 },
             },
         ]
@@ -601,11 +699,60 @@ class NotionSetup:
 
         except APIResponseError as e:
             error_msg = self._format_api_error(e)
-            raise ValueError(f"샘플 포스트 생성 실패: {error_msg}") from e
+            # Nested block depth 오류인 경우 더 간단한 버전으로 재시도
+            if "nested block depth exceeded" in error_msg.lower():
+                print("⚠️ 복잡한 블록 구조로 인한 오류 발생, 간단한 버전으로 재시도...")
+                return self._create_simple_sample_post(database_id, properties)
+            else:
+                raise ValueError(f"샘플 포스트 생성 실패: {error_msg}") from e
         except Exception as e:
-            raise ValueError(
-                f"예상치 못한 오류로 샘플 포스트 생성 실패: {str(e)}"
-            ) from e
+            print(f"⚠️ 샘플 포스트 생성 중 오류 발생, 간단한 버전으로 재시도...")
+            try:
+                return self._create_simple_sample_post(database_id, properties)
+            except Exception as fallback_error:
+                raise ValueError(
+                    f"샘플 포스트 생성 실패 (fallback 포함): {str(fallback_error)}"
+                ) from e
+
+    def _create_simple_sample_post(
+        self, database_id: str, properties: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        가장 간단한 형태의 샘플 포스트를 생성합니다 (fallback용).
+
+        Args:
+            database_id: 데이터베이스 ID
+            properties: 페이지 속성
+
+        Returns:
+            생성된 페이지 객체
+        """
+        # 최소한의 속성만 사용
+        simple_properties = {
+            "Name": properties.get(
+                "Name", {"title": [{"text": {"content": "Welcome Post"}}]}
+            ),
+            "Date": properties.get("Date"),
+            "isPublished": {"checkbox": True},
+            "skipRendering": {"checkbox": False},
+        }
+
+        # 블록 없이 페이지만 생성 (가장 안전)
+        try:
+            print("간단한 샘플 포스트 생성 중...")
+            page = self._retry_api_call(
+                self.notion.pages.create,
+                parent={"database_id": database_id},
+                properties=simple_properties,
+            )
+
+            print(f"✅ 간단한 샘플 포스트가 생성되었습니다!")
+            print(f"📄 페이지 ID: {page['id']}")
+            return page
+
+        except Exception as e:
+            print(f"❌ 간단한 샘플 포스트 생성도 실패: {str(e)}")
+            raise
 
     def update_config(self, database_id: str, target_folder: str) -> None:
         """
@@ -683,12 +830,15 @@ class NotionSetup:
 
         print(f"통합 설정 파일이 업데이트되었습니다: {config_path}")
 
-    def quick_setup(self, target_folder: str = "posts") -> Dict[str, Any]:
+    def quick_setup(
+        self, target_folder: str = "posts", skip_sample_posts: bool = False
+    ) -> Dict[str, Any]:
         """
         원스톱 빠른 설정: 노션 키만으로 자동 DB 생성 및 샘플 포스트 생성
 
         Args:
             target_folder: 대상 폴더 (기본값: "posts")
+            skip_sample_posts: 샘플 포스트 생성 건너뛰기 (기본값: False)
 
         Returns:
             설정 결과
@@ -712,12 +862,25 @@ class NotionSetup:
             database = self.create_hugo_database()
             setup_result["database_id"] = database["id"]
 
-            # 2단계: 샘플 포스트 생성
-            print("\n📝 2단계: 샘플 포스트 생성")
-            print("-" * 40)
+            # 2단계: 샘플 포스트 생성 (선택적)
+            if not skip_sample_posts:
+                print("\n📝 2단계: 샘플 포스트 생성")
+                print("-" * 40)
 
-            sample_post = self.create_sample_post(database["id"])
-            setup_result["sample_post_id"] = sample_post["id"]
+                try:
+                    sample_post = self.create_sample_post(database["id"])
+                    setup_result["sample_post_id"] = sample_post["id"]
+                    print("✅ 샘플 포스트가 성공적으로 생성되었습니다.")
+                except Exception as sample_error:
+                    print(f"⚠️ 샘플 포스트 생성 실패: {str(sample_error)}")
+                    print("⚠️ 샘플 포스트 없이 계속 진행합니다...")
+                    setup_result["errors"].append(
+                        f"샘플 포스트 생성 실패: {str(sample_error)}"
+                    )
+            else:
+                print("\n📝 2단계: 샘플 포스트 생성 건너뛰기")
+                print("-" * 40)
+                print("✅ 샘플 포스트 생성을 건너뛰었습니다.")
 
             # 3단계: 설정 파일 업데이트
             print("\n⚙️  3단계: 설정 파일 업데이트")
@@ -732,16 +895,20 @@ class NotionSetup:
             print("\n🎉 원스톱 설정 완료!")
             print("=" * 60)
             print("✅ 노션 데이터베이스가 생성되었습니다")
-            print("✅ 샘플 포스트가 추가되었습니다")
+            if not skip_sample_posts:
+                print("✅ 샘플 포스트가 추가되었습니다")
+            else:
+                print("✅ 샘플 포스트 생성을 건너뛰었습니다")
             print("✅ 설정 파일이 업데이트되었습니다")
 
             print(f"\n🔗 노션에서 확인하기:")
             print(
                 f"   데이터베이스: https://notion.so/{database['id'].replace('-', '')}"
             )
-            print(
-                f"   샘플 포스트: https://notion.so/{sample_post['id'].replace('-', '')}"
-            )
+            if not skip_sample_posts and setup_result.get("sample_post_id"):
+                print(
+                    f"   샘플 포스트: https://notion.so/{setup_result['sample_post_id'].replace('-', '')}"
+                )
 
             print(f"\n🚀 다음 단계:")
             print(f"   python notion_hugo_app.py 명령으로 블로그 동기화를 시작하세요!")

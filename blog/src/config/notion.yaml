@@ -1,0 +1,34 @@
+# Notion Pipeline Configuration Template
+# Copy this file and customize for your Notion integration
+
+notion:
+  # Required: Notion API credentials
+  token: "${NOTION_TOKEN}"  # Set via environment variable
+  database_id: "${NOTION_DATABASE_ID}"  # Set via environment variable
+  
+  # Sync configuration
+  sync_mode: "incremental"  # "incremental" | "full"
+  batch_size: 50
+  include_drafts: false
+  
+  # Output configuration
+  output_dir: "blog/content/posts"
+  markdown_format: "hugo"  # "hugo" | "standard"
+  
+  # Content filters
+  filters:
+    status: ["Published", "Live"]
+    date_range:
+      from: null  # "2024-01-01" format, null for no limit
+      to: null    # "2024-12-31" format, null for no limit
+  
+  # API configuration
+  rate_limit_delay: 0.1  # seconds between API calls
+  max_retries: 3
+  timeout: 30
+  
+  # Advanced options
+  preserve_notion_ids: true  # Keep Notion page IDs in frontmatter
+  convert_callouts: true     # Convert Notion callouts to Hugo shortcodes
+  download_images: true      # Download and store images locally
+  image_dir: "blog/static/images/notion"

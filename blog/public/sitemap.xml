@@ -2,12 +2,49 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>/categories/</loc>
+    <loc>https://gunn.kim/posts/getting-started-first-blog-post/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
   </url><url>
-    <loc>/</loc>
+    <loc>https://gunn.kim/categories/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
   </url><url>
-    <loc>/posts/</loc>
+    <loc>https://gunn.kim/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
   </url><url>
-    <loc>/tags/</loc>
+    <loc>https://gunn.kim/tags/getting-started/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/posts/how-to-use-your-notion-hugo-blog/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/tags/hugo/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/tags/notion/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/posts/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/tags/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/categories/technology/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/categories/tutorial/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/tags/tutorial/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/tags/welcome/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/posts/welcome-to-your-new-blog/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
+  </url><url>
+    <loc>https://gunn.kim/tags/workflow/</loc>
+    <lastmod>2025-08-07T16:15:00+00:00</lastmod>
   </url>
 </urlset>

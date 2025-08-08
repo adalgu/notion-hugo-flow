@@ -1,0 +1,66 @@
+# Deployment Pipeline Configuration Template
+# Copy this file and customize for your deployment platform
+
+deployment:
+  # Site configuration
+  site_directory: "blog/public"
+  
+  # Primary deployment platform
+  platform: "github_pages"  # "github_pages" | "vercel" | "netlify"
+  
+  # GitHub Pages configuration
+  github:
+    token: "${GITHUB_TOKEN}"  # Set via environment variable
+    repository: "${GITHUB_REPOSITORY}"  # Format: "username/repo"
+    branch: "gh-pages"
+    custom_domain: null  # Set to your custom domain if using one
+    force_orphan: true   # Create orphan gh-pages branch
+    
+  # Vercel configuration (alternative)
+  vercel:
+    token: "${VERCEL_TOKEN}"
+    project_id: "${VERCEL_PROJECT_ID}"
+    team_id: null  # Optional, for team accounts
+    
+  # Netlify configuration (alternative)
+  netlify:
+    token: "${NETLIFY_TOKEN}"
+    site_id: "${NETLIFY_SITE_ID}"
+    
+  # Deployment options
+  options:
+    auto_deploy: true
+    cache_invalidation: true
+    compression: true
+    cdn_enabled: true
+    
+  # Performance configuration
+  performance:
+    deploy_timeout: 300  # 5 minutes
+    max_retries: 3
+    retry_delay: 5  # seconds
+    parallel_uploads: 4
+    
+  # File handling
+  files:
+    ignore_patterns:
+      - ".DS_Store"
+      - "*.log"
+      - "Thumbs.db"
+      - ".git*"
+      - "node_modules"
+      - ".env*"
+    
+    # Compression settings
+    compress_types:
+      - "text/html"
+      - "text/css"
+      - "application/javascript"
+      - "application/json"
+      - "image/svg+xml"
+  
+  # Backup configuration
+  backup:
+    enabled: false
+    retention_days: 30
+    storage_location: "backups/deployments"
