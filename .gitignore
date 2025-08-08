@@ -68,7 +68,16 @@ logs/
 
 # CI/CD sensitive files
 .env.*
+!.env.example
 
 
 # Docker production artifacts
 docker-compose.override.yml
+
+
+# Config files
+/src/config/notion-hugo-config.yaml
+/src/config/.notion-hugo-state.json
+/src/config/.notion-hugo-state.json.bak
+/src/config/notion-hugo-config.yaml.bak
+
