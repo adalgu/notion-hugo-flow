@@ -228,4 +228,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for the open source community**
+**Made with ❤️ for the open source community**## Configuration
+
+- Copy `src/config/notion-hugo-config.example.yaml` to `src/config/notion-hugo-config.yaml`.
+- Set environment variables instead of hardcoding secrets:
+  - `NOTION_API_TOKEN`
+  - `NOTION_DATABASE_ID`
+  - `OPENAI_API_KEY` (if used)
+  - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` (if used)
+  - `GH_TOKEN` (if used)
+
+State file is ignored by git. For local runs, a placeholder `.notion-hugo-state.json` will be created at runtime; do not commit it. See `src/config/.notion-hugo-state.example.json` for structure.
