@@ -221,7 +221,7 @@ class NotionSetup:
                 return self.parent_page_id
             except Exception:
                 print(
-                    f"지정된 부모 페이지 '{self.parent_page_id}'에 접근할 수 없습니다."
+                    f"지정된 부�� 페이지 '{self.parent_page_id}'에 접근할 수 없습니다."
                 )
 
         # 2. 워크스페이스 루트 레벨 페이지 찾기 (최우선)
@@ -255,7 +255,7 @@ class NotionSetup:
                 )
                 return selected_page["id"]
             else:
-                # 모든 루트 페이지가 샘플이면 첫 번째 것 사용
+                # 모든 루트 페이지가 샘플이면 첫 ���째 것 사용
                 selected_page = root_pages[0]
                 print(f"워크스페이스 루트 페이지 사용: {selected_page['title']}")
                 return selected_page["id"]
@@ -316,7 +316,7 @@ class NotionSetup:
 
         # 4. 새로운 데이터베이스 전용 페이지 생성 시도
         try:
-            print("새로운 데이터베이스 전용 페이지를 생성합니다...")
+            print("새로운 데이터베이스 전용 ��이지를 생성합니다...")
             new_page = self._create_root_page_for_database()
             if new_page:
                 print(
@@ -484,7 +484,7 @@ class NotionSetup:
             "subtitle": {"rich_text": {}},
             "linkTitle": {"rich_text": {}},
             "layout": {"rich_text": {}},
-            # 시스템 시간 속성 (자동)
+            # 시스템 시각 속성 (자동)
             "Created time": {"date": {}},
             "Last Updated": {"last_edited_time": {}},
             # 추가 속성 (선택)
@@ -585,24 +585,54 @@ class NotionSetup:
         Returns:
             생성된 페이지 객체
         """
+        # 데이터베이스 속성 가져오기
+        database = self._retry_api_call(
+            self.notion.databases.retrieve, database_id=database_id
+        )
+        db_properties = database.get("properties", {})
+        
+        # 속성 이름 매핑을 위한 딕셔너리 생성
+        property_names = {prop_name.lower(): prop_name for prop_name in db_properties.keys()}
+        
+        print(f"데이터베이스 속성 확인: {list(db_properties.keys())}")
+
         # 현재 날짜 생성
         from datetime import datetime
-
         now = datetime.now().isoformat()
 
-        # 페이지 속성 정의
-        properties = {
-            # 최소한 속성 (필수)
-            "Name": {
+        # 페이지 속성 정의 (데이터베이스에 존재하는 속성만 설정)
+        properties = {}
+
+        # Name/title 속성 설정
+        name_prop_key = property_names.get("name") or property_names.get("title")
+        if name_prop_key:
+            properties[name_prop_key] = {
                 "title": [{"text": {"content": "시작하기 - 첫 번째 블로그 포스트"}}]
-            },
-            "Date": {"date": {"start": now}},
-            # 콘텐츠 제어 속성 (추천)
-            "skipRendering": {"checkbox": False},
-            "isPublished": {"checkbox": True},
-            # expiryDate는 필요한 경우에만 설정하므로 여기서는 생략
-            # 메타데이터 속성 (추천)
-            "Description": {
+            }
+            print(f"속성 '{name_prop_key}' 설정됨")
+
+        # Date 속성 설정
+        date_prop_key = property_names.get("date")
+        if date_prop_key:
+            properties[date_prop_key] = {"date": {"start": now}}
+            print(f"속성 '{date_prop_key}' 설정됨")
+
+        # skipRendering 속성 설정
+        skip_rendering_key = property_names.get("skiprendering")
+        if skip_rendering_key:
+            properties[skip_rendering_key] = {"checkbox": False}
+            print(f"속성 '{skip_rendering_key}' 설정됨")
+
+        # isPublished 속성 설정
+        is_published_key = property_names.get("ispublished")
+        if is_published_key:
+            properties[is_published_key] = {"checkbox": True}
+            print(f"속성 '{is_published_key}' 설정됨")
+
+        # Description 속성 설정
+        description_key = property_names.get("description")
+        if description_key:
+            properties[description_key] = {
                 "rich_text": [
                     {
                         "text": {
@@ -610,8 +640,13 @@ class NotionSetup:
                         }
                     }
                 ]
-            },
-            "Summary": {
+            }
+            print(f"속성 '{description_key}' 설정됨")
+
+        # Summary 속성 설정
+        summary_key = property_names.get("summary")
+        if summary_key:
+            properties[summary_key] = {
                 "rich_text": [
                     {
                         "text": {
@@ -619,38 +654,100 @@ class NotionSetup:
                         }
                     }
                 ]
-            },
-            "slug": {
+            }
+            print(f"속성 '{summary_key}' 설정됨")
+
+        # slug 속성 설정
+        slug_key = property_names.get("slug")
+        if slug_key:
+            properties[slug_key] = {
                 "rich_text": [{"text": {"content": "getting-started-first-blog-post"}}]
-            },
-            "Author": {"rich_text": [{"text": {"content": "작성자 이름"}}]},
-            "weight": {"number": 1},  # 상위에 표시될 첫 번째 포스트
-            # 분류 속성 (추천)
-            "categories": {"multi_select": [{"name": "Technology"}]},
-            "Tags": {
+            }
+            print(f"속성 '{slug_key}' 설정됨")
+
+        # Author 속성 설정
+        author_key = property_names.get("author")
+        if author_key:
+            properties[author_key] = {"rich_text": [{"text": {"content": "작성자 이름"}}]}
+            print(f"속성 '{author_key}' 설정됨")
+
+        # weight 속성 설정
+        weight_key = property_names.get("weight")
+        if weight_key:
+            properties[weight_key] = {"number": 1}
+            print(f"속성 '{weight_key}' 설정됨")
+
+        # categories 속성 설정
+        categories_key = property_names.get("categories")
+        if categories_key:
+            properties[categories_key] = {"multi_select": [{"name": "Technology"}]}
+            print(f"속성 '{categories_key}' 설정됨")
+
+        # Tags 속성 설정
+        tags_key = property_names.get("tags")
+        if tags_key:
+            properties[tags_key] = {
                 "multi_select": [
                     {"name": "Tutorial"},
                     {"name": "Hugo"},
                     {"name": "Notion"},
                 ]
-            },
-            "keywords": {
+            }
+            print(f"속성 '{tags_key}' 설정됨")
+
+        # keywords 속성 설정
+        keywords_key = property_names.get("keywords")
+        if keywords_key:
+            properties[keywords_key] = {
                 "rich_text": [
                     {"text": {"content": "notion,hugo,blog,tutorial,시작하기"}}
                 ]
-            },
-            # 테마 지원 속성 (추천)
-            "featured": {"checkbox": True},
-            "subtitle": {
+            }
+            print(f"속성 '{keywords_key}' 설정됨")
+
+        # featured 속성 설정
+        featured_key = property_names.get("featured")
+        if featured_key:
+            properties[featured_key] = {"checkbox": True}
+            print(f"속성 '{featured_key}' 설정됨")
+
+        # subtitle 속성 설정
+        subtitle_key = property_names.get("subtitle")
+        if subtitle_key:
+            properties[subtitle_key] = {
                 "rich_text": [{"text": {"content": "Notion과 Hugo로 블로그 시작하기"}}]
-            },
-            # 시스템 속성 (자동)
-            "Created time": {"date": {"start": now}},
-            # 추가 속성 (선택)
-            "ShowToc": {"checkbox": True},
-            "HideSummary": {"checkbox": False},
-            "linkTitle": {"rich_text": [{"text": {"content": "시작하기"}}]},
-        }
+            }
+            print(f"속성 '{subtitle_key}' 설정됨")
+
+        # Created time 속성 설정
+        created_time_key = property_names.get("created time")
+        if created_time_key:
+            properties[created_time_key] = {"date": {"start": now}}
+            print(f"속성 '{created_time_key}' 설정됨")
+
+        # Last Updated 속성 설정
+        last_updated_key = property_names.get("last updated")
+        if last_updated_key:
+            properties[last_updated_key] = {"date": {"start": now}}
+            print(f"속성 '{last_updated_key}' 설정됨")
+
+        # ShowToc 속성 설정
+        show_toc_key = property_names.get("showtoc")
+        if show_toc_key:
+            properties[show_toc_key] = {"checkbox": True}
+            print(f"속성 '{show_toc_key}' 설정됨")
+
+        # HideSummary 속성 설정
+        hide_summary_key = property_names.get("hidesummary")
+        if hide_summary_key:
+            properties[hide_summary_key] = {"checkbox": False}
+            print(f"속성 '{hide_summary_key}' 설정됨")
+
+        # linkTitle 속성 설정
+        link_title_key = property_names.get("linktitle")
+        if link_title_key:
+            properties[link_title_key] = {"rich_text": [{"text": {"content": "시작하기"}}]}
+            print(f"속성 '{link_title_key}' 설정됨")
 
         # 페이지 콘텐츠 블록 정의 (간단한 구조로 변경)
         children = [
@@ -731,15 +828,15 @@ class NotionSetup:
             생성된 페이지 객체
         """
         # 최소한의 속성만 사용
-        simple_properties = {
-            "Name": properties.get(
-                "Name", {"title": [{"text": {"content": "Welcome Post"}}]}
-            ),
-            "Date": properties.get("Date"),
-            "isPublished": {"checkbox": True},
-            "skipRendering": {"checkbox": False},
-        }
-
+        simple_properties = {}
+        for key, value in properties.items():
+            if key in ["Name", "name", "title", "Title"] or key.lower() in ["name", "title"]:
+                simple_properties[key] = value
+                break
+        else:
+            # Name/title 속성이 없으면 기본값 사용
+            simple_properties["Name"] = {"title": [{"text": {"content": "Welcome Post"}}]}
+        
         # 블록 없이 페이지만 생성 (가장 안전)
         try:
             print("간단한 샘플 포스트 생성 중...")
@@ -768,7 +865,7 @@ class NotionSetup:
         # 통합 설정 파일 경로
         config_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
-            "src/config/notion-hugo-config.yaml",
+            "config/notion-hugo-config.yaml",
         )
 
         if os.path.exists(config_path):
@@ -1008,7 +1105,7 @@ class NotionSetup:
             # 2. 설정 파일 검증
             config_path = os.path.join(
                 os.path.dirname(os.path.dirname(__file__)),
-                "src/config/notion-hugo-config.yaml",
+                "config/notion-hugo-config.yaml",
             )
             if os.path.exists(config_path):
                 validation_result["config_exists"] = True
@@ -1036,7 +1133,7 @@ class NotionSetup:
                             validation_result["errors"].append(
                                 f"설정된 데이터베이스 '{database_id}'에 접근할 수 없습니다"
                             )
-                            print(f"❌ 설정된 데이터베이스에 접근할 수 없습니다")
+                            print(f"❌ 설정된 데이터베이스�� 접근할 수 없습니다")
                             validation_result["recommendations"].append(
                                 "데이터베이스가 통합에 공유되었는지 확인하거나 새로 설정하세요"
                             )
@@ -1190,7 +1287,7 @@ class NotionMigration(NotionSetup):
                     ]
                 ]
 
-            # 소스 데이터베이스의 모든 페이지 가져오기
+            # 소스 데이터베이스의 ��든 페이지 가져오기
             print("소스 데이터베이스에서 페이지 가져오는 중...")
             pages_response = self.notion.databases.query(database_id=source_db_id)
             pages = pages_response["results"]
@@ -1314,7 +1411,7 @@ class NotionMigration(NotionSetup):
             "Last Updated": "last_edited_time",  # 마지막 수정 시간은 필수
         }
 
-        # 필수 속성 확인
+        # 필수 속�� 확인
         for prop_name, expected_type in required_properties.items():
             if prop_name not in database["properties"]:
                 result["missingRequired"].append(prop_name)
