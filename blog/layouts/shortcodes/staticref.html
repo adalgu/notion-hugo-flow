@@ -1,5 +1,0 @@
-{{ $path := .Get 0 }}
-{{ $target := .Get 1 }}
-<a href="{{ .Site.BaseURL }}{{ $path }}" {{ if eq $target "newtab" }}target="_blank" rel="noopener"{{ end }}>
-  {{ .Inner }}
-</a>

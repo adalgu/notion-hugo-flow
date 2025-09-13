@@ -1,8 +1,0 @@
-{{- $link := .Destination -}} {{- $isRemote := strings.HasPrefix $link "http"
--}} {{- if not $isRemote -}} {{- with .Page.GetPage $link -}} {{- $link =
-.RelPermalink -}} {{- else -}} {{- if strings.Contains $link "{{% relref" -}}
-{{- /* Skip problematic relref shortcodes */ -}} {{- $link = "#" -}} {{- end -}}
-{{- end -}} {{- end -}}
-<a href="{{ $link | safeURL }}" {{ with .Title}} title="{{ . }}" {{ end }}>
-  {{- .Text | safeHTML -}}
-</a>

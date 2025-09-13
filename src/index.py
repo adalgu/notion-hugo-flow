@@ -6,7 +6,7 @@ from notion_client import Client
 from dotenv import load_dotenv
 
 from .config import load_config
-from .helpers import iterate_paginated_api, is_full_page, ensure_directory
+from .utils.helpers import iterate_paginated_api, is_full_page, ensure_directory
 from .render import save_page, batch_process_pages
 from .file import get_all_content_files
 from .types import BatchProcessResult
@@ -159,8 +159,11 @@ def main():
         config = load_config()
         print("[Info] 설정 로드 완료")
         
-        # Notion 클라이언트 생성
-        notion = Client(auth=os.environ.get('NOTION_TOKEN'))
+        # Notion 클라이언트 생성 with API version 2025-09-03
+        notion = Client(
+            auth=os.environ.get('NOTION_TOKEN'),
+            notion_version="2025-09-03"
+        )
         
         # 데이터베이스와 페이지 처리
         db_results = process_databases(notion, config)

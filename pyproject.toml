@@ -1,0 +1,135 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "notion-hugo-flow"
+version = "2.0.0"
+description = "Transform your Notion workspace into a blazing-fast Hugo blog with smart automation and bidirectional sync"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Gunn Kim", email = "gunn@gunn.kim"}
+]
+maintainers = [
+    {name = "Gunn Kim", email = "gunn@gunn.kim"}
+]
+keywords = ["notion", "hugo", "blog", "static-site", "cms", "automation"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "notion-client>=2.0.0",
+    "pyyaml>=6.0",
+    "requests>=2.28.0",
+    "python-frontmatter>=1.0.0",
+    "python-dateutil>=2.8.0",
+    "python-dotenv>=1.0.0",
+    "fs>=2.4.0",
+    "tabulate>=0.9.0",
+    "click>=8.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=2.20.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/adalgu/notion-hugo-flow"
+Documentation = "https://github.com/adalgu/notion-hugo-flow/wiki"
+Repository = "https://github.com/adalgu/notion-hugo-flow.git"
+"Bug Reports" = "https://github.com/adalgu/notion-hugo-flow/issues"
+"Feature Requests" = "https://github.com/adalgu/notion-hugo-flow/discussions"
+
+[project.scripts]
+notion-hugo = "src.cli:main"
+nhf = "src.cli:main"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.setuptools.package-data]
+src = ["config/*.yaml", "config/*.example"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "tests/*",
+    "*/test_*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

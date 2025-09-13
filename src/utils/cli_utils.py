@@ -28,6 +28,46 @@ def print_info(message: str) -> None:
     print(f"ℹ️ {message}")
 
 
+def print_header(title: str, width: int = 60) -> None:
+    """
+    Print an emphasized header.
+    
+    Args:
+        title: The title to display
+        width: Total width of the header
+    """
+    print("\n" + "=" * width)
+    padding = (width - len(title)) // 2
+    print(" " * padding + title)
+    print("=" * width + "\n")
+
+
+def ask_yes_no(question: str, default: bool = True) -> bool:
+    """
+    Ask a yes/no question and get the response.
+    
+    Args:
+        question: The question to ask
+        default: Default value (True: yes, False: no)
+        
+    Returns:
+        User's choice (True: yes, False: no)
+    """
+    default_text = "[Y/n]" if default else "[y/N]"
+    while True:
+        response = input(f"{question} {default_text}: ").strip().lower()
+        
+        if not response:
+            return default
+        
+        if response in ["y", "yes"]:
+            return True
+        elif response in ["n", "no"]:
+            return False
+            
+        print_warning("Please respond with 'y' or 'n'.")
+
+
 def extract_notion_id_from_url(url: str) -> Optional[str]:
     """
     Extract Notion ID from a URL with improved error handling and validation.

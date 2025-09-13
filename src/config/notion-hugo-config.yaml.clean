@@ -1,0 +1,205 @@
+notion:
+  api:
+    token: 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
+    timeout: 30
+    retry:
+      max_attempts: 3
+      backoff_factor: 2
+  mount:
+    auto_discovery:
+      enabled: false
+      parent_page_url: ''
+    databases:
+    - database_id: 2487522e-eb2f-815a-97b1-e035f30f83ea
+      target_folder: posts
+      content_type: post
+      property_mapping:
+        title: Name
+        status: Status
+        created: Created
+        tags: Tags
+        category: Category
+    pages:
+    - page_id: ''
+      target_file: pages/about.md
+  sync:
+    mode: smart
+    batch_size: 10
+    include_drafts: false
+    filters:
+      status_filter:
+      - Published
+      - Live
+      date_range:
+        enabled: false
+        from: '2020-01-01'
+        to: null
+hugo:
+  directories:
+    root: blog
+    content: content
+    public: public
+    static: static
+    themes: themes
+  site:
+    base_url: https://gunn.kim
+    title: Exobrain
+    description: Exobrain in the age of AI
+    language: en
+    author: Gunn Kim
+  theme:
+    name: PaperMod
+    params:
+      env: production
+      default_theme: auto
+      show_reading_time: true
+      show_share_buttons: true
+      show_post_nav_links: true
+      show_breadcrumbs: true
+      show_code_copy_buttons: true
+      show_word_count: true
+      show_toc: false
+      disable_theme_toggle: false
+  content:
+    markdown:
+      renderer: goldmark
+      goldmark:
+        extensions:
+          definition_list: true
+          footnote: true
+          linkify: true
+          strikethrough: true
+          table: true
+          task_list: true
+          typographer: true
+        parser:
+          auto_heading_id: true
+          auto_heading_id_type: github
+        renderer:
+          unsafe: true
+    highlight:
+      style: monokai
+      line_numbers: true
+      code_fences: true
+      guess_syntax: true
+    math:
+      enabled: true
+      block_delimiters:
+      - \[
+      - \]
+      inline_delimiters:
+      - \(
+      - \)
+      copy_tex: true
+      mhchem: true
+  menu:
+    main:
+    - name: posts
+      url: /posts/
+      weight: 5
+    - name: tags
+      url: /tags/
+      weight: 20
+  seo:
+    google_analytics:
+      site_verification_tag: G-BQ6CZ7HMQK
+    sitemap:
+      change_frequency: weekly
+      priority: 0.5
+  urls:
+    permalinks:
+      posts: :sections/:slug
+      pages: :slug
+    filename:
+      format: date-title
+      date_format: '%Y-%m-%d'
+      korean_title_mode: slug
+content:
+  images:
+    optimization: true
+    formats:
+    - jpg
+    - jpeg
+    - png
+    - webp
+    max_width: 1200
+    quality: 85
+  files:
+    allowed_extensions:
+    - .md
+    - .jpg
+    - .jpeg
+    - .png
+    - .gif
+    - .svg
+    - .pdf
+    max_file_size: 10
+  validation:
+    required_fields:
+    - title
+    - date
+    validate_markdown: true
+deployment:
+  strategy: github_actions
+  github_actions:
+    auto_deploy: true
+    trigger: push
+    branch: main
+    hugo_version: 0.140.0
+    hugo_extended: true
+  schedule:
+    enabled: true
+    cron: 0 */2 * * *
+    timezone: UTC
+  build:
+    environment: production
+    enable_git_info: true
+    build_drafts: false
+    build_future: false
+development:
+  server:
+    port: 1313
+    host: localhost
+    watch: true
+  debug:
+    verbose: false
+    log_level: info
+    profiling: false
+  docker:
+    image: notion-hugo:latest
+    ports:
+    - 1313:1313
+    volumes:
+    - ./:/app
+    - ./.notion-hugo-state.json:/app/.notion-hugo-state.json
+security:
+  environment_variables:
+    use_env_vars: true
+    validate_env_vars: true
+  logging:
+    mask_sensitive_data: true
+    mask_patterns:
+    - ntn_[a-zA-Z0-9]+
+    - '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+  data:
+    backup_config: true
+    encryption:
+      enabled: false
+      algorithm: AES-256-GCM
+features:
+  experimental:
+    graphql_api: false
+    advanced_caching: false
+    plugin_system: false
+  legacy:
+    old_config_support: true
+    legacy_api: false
+metadata:
+  config_version: 2.0.0
+  generated_at: ''
+  generated_by: notion-hugo-cli
+  last_updated: ''
+  compatibility:
+    min_notion_hugo_version: 1.0.0
+    hugo_version_range: '>=0.120.0'
+    python_version_range: '>=3.8'

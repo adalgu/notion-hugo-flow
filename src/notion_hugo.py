@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Notion-Hugo 통합 파이프라인
+Notion-Hugo Integrated Pipeline
 
-이 스크립트는 Notion에서 콘텐츠를 가져와 마크다운으로 변환하고,
-Hugo 전처리를 통해 오류 파일을 처리한 후 Hugo 빌드를 실행합니다.
+This script fetches content from Notion, converts it to markdown,
+processes files through Hugo preprocessing to handle errors, and then runs Hugo build.
 
-실행 방법:
+Usage:
     python -m src.notion_hugo [options]
 
-옵션:
-    --notion-only: Notion에서 마크다운 변환만 실행
-    --hugo-only: Hugo 전처리 및 빌드만 실행
-    --no-build: Hugo 빌드 단계 건너뛰기
-    --hugo-args="...": Hugo에 전달할 인자 (예: --hugo-args="server --minify")
+Options:
+    --notion-only: Execute only Notion to markdown conversion
+    --hugo-only: Execute only Hugo preprocessing and build
+    --no-build: Skip Hugo build stage
+    --hugo-args="...": Arguments to pass to Hugo (e.g., --hugo-args="server --minify")
 """
 
 import os
@@ -32,100 +32,100 @@ from .config import (
     DatabaseMount,
     PageMount,
 )
-from .helpers import iterate_paginated_api, is_full_page, ensure_directory
+from .utils.helpers import iterate_paginated_api, is_full_page, ensure_directory
 from typing import Union
 from .render import save_page, batch_process_pages
 from .file import get_all_content_files
 from .types import BatchProcessResult
-from .hugo_processor import HugoProcessor
-from .notion_setup import NotionSetup, NotionMigration, NotionSetupConfig
+from .hugo.hugo_processor import HugoProcessor
+from .notion.notion_setup import NotionSetup, NotionMigration, NotionSetupConfig
 from .metadata import MetadataManager
 
 
 def parse_arguments():
     """
-    명령줄 인수를 파싱합니다.
+    Parse command-line arguments.
 
     Returns:
-        파싱된 인수
+        Parsed arguments
     """
-    parser = argparse.ArgumentParser(description="Notion-Hugo 통합 파이프라인")
-    # 기존 파이프라인 옵션
+    parser = argparse.ArgumentParser(description="Notion-Hugo Integrated Pipeline")
+    # Existing pipeline options
     parser.add_argument(
-        "--notion-only", action="store_true", help="Notion에서 마크다운 변환만 실행"
+        "--notion-only", action="store_true", help="Execute only Notion to markdown conversion"
     )
     parser.add_argument(
-        "--hugo-only", action="store_true", help="Hugo 전처리 및 빌드만 실행"
+        "--hugo-only", action="store_true", help="Execute only Hugo preprocessing and build"
     )
     parser.add_argument(
-        "--no-build", action="store_true", help="Hugo 빌드 단계 건너뛰기"
+        "--no-build", action="store_true", help="Skip Hugo build stage"
     )
     parser.add_argument(
         "--hugo-args",
         default="",
-        help="Hugo에 전달할 인자 (예: --hugo-args='server --minify')",
+        help="Arguments to pass to Hugo (e.g., --hugo-args='server --minify')",
     )
 
-    # 데이터베이스 설정 옵션
-    setup_group = parser.add_argument_group("데이터베이스 설정")
+    # Database setup options
+    setup_group = parser.add_argument_group("Database Setup")
     setup_group.add_argument(
-        "--setup-db", action="store_true", help="새 노션 데이터베이스 생성 및 설정"
+        "--setup-db", action="store_true", help="Create and configure new Notion database"
     )
     setup_group.add_argument(
-        "--parent-page", help="노션 상위 페이지 ID (데이터베이스 생성 위치)"
+        "--parent-page", help="Notion parent page ID (database creation location)"
     )
     setup_group.add_argument(
         "--db-name",
         default="Hugo Blog Posts",
-        help="생성할 데이터베이스 이름 (기본값: 'Hugo Blog Posts')",
+        help="Database name to create (default: 'Hugo Blog Posts')",
     )
     setup_group.add_argument(
-        "--target-folder", default="posts", help="컨텐츠 대상 폴더 (기본값: 'posts')"
+        "--target-folder", default="posts", help="Content target folder (default: 'posts')"
     )
 
-    # 데이터베이스 마이그레이션 옵션
-    migrate_group = parser.add_argument_group("데이터베이스 마이그레이션")
+    # Database migration options
+    migrate_group = parser.add_argument_group("Database Migration")
     migrate_group.add_argument(
         "--migrate-db",
         action="store_true",
-        help="기존 노션 데이터베이스에서 마이그레이션",
+        help="Migrate from existing Notion database",
     )
     migrate_group.add_argument(
-        "--source-db", help="소스 데이터베이스 ID (마이그레이션 시 필요)"
+        "--source-db", help="Source database ID (required for migration)"
     )
 
-    # 증분 처리 옵션
-    incremental_group = parser.add_argument_group("증분 처리 옵션")
+    # Incremental processing options
+    incremental_group = parser.add_argument_group("Incremental Processing Options")
     incremental_group.add_argument(
         "--incremental",
         action="store_true",
-        help="변경된 페이지만 처리 (기본값)",
+        help="Process only changed pages (default)",
         default=True,
     )
     incremental_group.add_argument(
-        "--full-sync", action="store_true", help="모든 페이지 강제 재처리"
+        "--full-sync", action="store_true", help="Force reprocessing of all pages"
     )
     incremental_group.add_argument(
         "--state-file",
         default="src/config/.notion-hugo-state.json",
-        help="메타데이터 파일 위치 (기본값: src/config/.notion-hugo-state.json)",
+        help="Metadata file location (default: src/config/.notion-hugo-state.json)",
     )
     incremental_group.add_argument(
-        "--dry-run", action="store_true", help="실제 변환 없이 변경사항만 확인"
+        "--dry-run", action="store_true", help="Check changes only without actual conversion"
     )
 
-    # 대화형 모드 옵션
-    interactive_group = parser.add_argument_group("대화형 모드")
+    # Interactive mode options
+    interactive_group = parser.add_argument_group("Interactive Mode")
     interactive_group.add_argument(
-        "--interactive", "-i", action="store_true", help="대화형 설정 모드로 실행"
+        "--interactive", "-i", action="store_true", help="Run in interactive setup mode"
     )
     interactive_group.add_argument(
         "--quick-setup",
         action="store_true",
-        help="원스톱 빠른 설정 (노션 키만으로 자동 설정)",
+        help="One-stop quick setup (automatic setup with just Notion key)",
     )
     interactive_group.add_argument(
-        "--validate", action="store_true", help="현재 노션-휴고 설정을 검증"
+        "--validate", action="store_true", help="Validate current Notion-Hugo configuration"
     )
 
     return parser.parse_args()
@@ -139,53 +139,56 @@ def run_notion_pipeline(
     professional_mode: bool = False,
 ) -> Dict[str, Any]:
     """
-    Notion 파이프라인을 실행합니다 (마크다운 변환).
+    Execute Notion pipeline (markdown conversion).
 
     Args:
-        incremental: 증분 처리 여부 (기본값: True)
-        state_file: 메타데이터 파일 경로 (기본값: "src/config/.notion-hugo-state.json")
-        dry_run: 실제 변환 없이 변경사항만 확인 (기본값: False)
-        large_db_mode: 대용량 데이터베이스 처리 모드 (기본값: False)
-        professional_mode: 전문 마이그레이션 모드 (기본값: False)
+        incremental: Enable incremental processing (default: True)
+        state_file: Metadata file path (default: "src/config/.notion-hugo-state.json")
+        dry_run: Check changes only without actual conversion (default: False)
+        large_db_mode: Large database processing mode (default: False)
+        professional_mode: Professional migration mode (default: False)
 
     Returns:
-        처리 결과 (성공 여부, 페이지 ID 목록, 결과 목록)
+        Processing results (success status, page ID list, result list)
     """
     try:
-        # 환경 변수 로드
+        # Load environment variables
         load_dotenv()
 
         if not os.environ.get("NOTION_TOKEN"):
-            raise ValueError("NOTION_TOKEN 환경 변수가 설정되지 않았습니다")
+            raise ValueError("NOTION_TOKEN environment variable is not set")
 
-        # 설정 로드
+        # Load configuration
         config = load_config()
-        print("[Info] 설정 로드 완료")
+        print("[Info] Configuration loaded successfully")
 
-        # 메타데이터 관리자 초기화
+        # Initialize metadata manager
         metadata = MetadataManager(state_file) if incremental else None
         if incremental:
-            print(f"[Info] 메타데이터 로드 완료 (파일: {state_file})")
+            print(f"[Info] Metadata loaded successfully (file: {state_file})")
 
-        # 처리 모드 표시
+        # Display processing mode
         if professional_mode:
-            print("[Info] 전문 마이그레이션 모드: 제한 없이 모든 페이지를 처리합니다")
+            print("[Info] Professional migration mode: Processing all pages without limits")
         elif large_db_mode:
             print(
-                "[Info] 대용량 데이터베이스 모드: 제한된 개수로 처리하고 에러 시 fallback합니다"
+                "[Info] Large database mode: Processing limited count with fallback on error"
             )
         elif incremental:
-            print("[Info] 증분 처리 모드: 변경된 페이지만 처리합니다")
+            print("[Info] Incremental processing mode: Processing only changed pages")
         else:
-            print("[Info] 전체 동기화 모드: 모든 페이지를 처리합니다")
+            print("[Info] Full synchronization mode: Processing all pages")
 
         if dry_run:
-            print("[Info] 테스트 모드: 실제 변환 없이 변경사항만 확인합니다")
+            print("[Info] Test mode: Checking changes only without actual conversion")
 
-        # Notion 클라이언트 생성
-        notion = Client(auth=os.environ.get("NOTION_TOKEN"))
+        # Create Notion client with API version 2025-09-03
+        notion = Client(
+            auth=os.environ.get("NOTION_TOKEN"),
+            notion_version="2025-09-03"
+        )
 
-        # Hugo 구조 확인
+        # Verify Hugo structure
         processor = HugoProcessor()
         processor.ensure_structure()
 
@@ -470,7 +473,7 @@ def batch_process_pages_with_metadata(
                     page_id,
                     status="success",
                     last_edited=last_edited,
-                    target_path=f"content/{target_folder}/{page_id}.md",
+                    target_path=f"blog/content/{target_folder}/{page_id}.md",
                     hash=metadata.compute_content_hash(content),
                 )
             else:
@@ -1150,12 +1153,15 @@ def run_interactive_setup() -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
+def run_quick_setup(
+    target_folder: str = "posts", skip_sample_posts: bool = False
+) -> Dict[str, Any]:
     """
     원스톱 빠른 설정을 실행합니다.
 
     Args:
         target_folder: 대상 폴더
+        skip_sample_posts: 샘플 포스트 생성 건너뛰기
 
     Returns:
         설정 결과
@@ -1186,7 +1192,7 @@ def run_quick_setup(target_folder: str = "posts") -> Dict[str, Any]:
         setup = NotionSetup(setup_config)
 
         # 원스톱 설정 실행
-        result = setup.quick_setup(target_folder)
+        result = setup.quick_setup(target_folder, skip_sample_posts)
 
         if result["success"]:
             print_success("원스톱 설정이 완료되었습니다!")

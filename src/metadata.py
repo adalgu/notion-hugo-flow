@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Notion-Hugo 메타데이터 관리
+Notion-Hugo Metadata Management
 
-이 모듈은 Notion 페이지 처리 상태를 추적하고 증분 처리를 지원하기 위한
-메타데이터 관리 기능을 제공합니다.
+This module provides metadata management functionality to track 
+Notion page processing status and support incremental processing.
 """
 
 import os
@@ -14,7 +14,7 @@ from typing import Dict, Any, List, Optional, Set
 
 
 class MetadataManager:
-    """Notion-Hugo 메타데이터 관리 클래스"""
+    """Notion-Hugo metadata management class"""
     
     def __init__(self, file_path: str = "src/config/.notion-hugo-state.json"):
         """
@@ -158,13 +158,13 @@ class MetadataManager:
         
     def compute_content_hash(self, content: str) -> str:
         """
-        콘텐츠 해시 계산
+        Content hash calculation
         
         Args:
-            content: 해시를 계산할 콘텐츠
+            content: Content to calculate hash for
             
         Returns:
-            SHA-256 해시값
+            SHA-256 hash value
         """
         if content is None:
             content = ""
@@ -173,3 +173,24 @@ class MetadataManager:
             content = str(content)
             
         return hashlib.sha256(content.encode('utf-8')).hexdigest()
+    
+    def has_page_changed(self, page: Dict[str, Any]) -> bool:
+        """
+        Check if a page has changed since last processing.
+        
+        Args:
+            page: Notion page object
+            
+        Returns:
+            True if page has changed, False otherwise
+        """
+        page_id = page["id"]
+        last_edited = page.get("last_edited_time")
+        
+        # If page is not in metadata, it's new (changed)
+        if page_id not in self.metadata["pages"]:
+            return True
+            
+        # Check if last edited time is different
+        stored_edited = self.metadata["pages"][page_id].get("last_edited")
+        return last_edited != stored_edited

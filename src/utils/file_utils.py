@@ -6,6 +6,7 @@
 
 import os
 import re
+import hashlib
 import unicodedata
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -117,3 +118,50 @@ def get_filename_with_extension(
     """
     base_filename = generate_filename(properties, page_id, config)
     return f"{base_filename}{extension}"
+
+
+def safe_filename(name: str) -> str:
+    """
+    안전한 파일명으로 변환합니다.
+    
+    Args:
+        name: 원본 파일명
+        
+    Returns:
+        안전한 파일명
+    """
+    # Unicode normalization
+    name = unicodedata.normalize('NFKD', name)
+    
+    # Remove or replace unsafe characters
+    name = re.sub(r'[<>:"/\\|?*]', '', name)  # Remove Windows forbidden chars
+    name = re.sub(r'[^\w\s\-.]', '', name)    # Keep only alphanumeric, spaces, hyphens, dots
+    name = re.sub(r'\s+', '-', name)          # Replace spaces with hyphens
+    name = re.sub(r'-+', '-', name)           # Collapse multiple hyphens
+    name = name.strip('.-')                   # Remove leading/trailing dots and hyphens
+    
+    # Ensure it's not empty
+    if not name:
+        name = "unnamed"
+    
+    return name
+
+
+def calculate_file_hash(filepath: str) -> str:
+    """
+    파일의 MD5 해시를 계산합니다.
+    
+    Args:
+        filepath: 파일 경로
+        
+    Returns:
+        MD5 해시 문자열
+    """
+    hash_md5 = hashlib.md5()
+    try:
+        with open(filepath, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
+    except Exception:
+        return ""

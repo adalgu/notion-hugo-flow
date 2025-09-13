@@ -65,7 +65,10 @@ class OneStopInstaller:
         """
         self.notion_token = notion_token
         self.interactive = interactive
-        self.notion = Client(auth=notion_token)
+        self.notion = Client(
+            auth=notion_token,
+            notion_version="2025-09-03"
+        )
         self.database_id: Optional[str] = None
         self.deployment_type: Optional[str] = None
 

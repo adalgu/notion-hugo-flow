@@ -1,0 +1,30 @@
+# Example config. Copy to src/config/notion-hugo-config.yaml and set env vars.
+notion:
+  api:
+    token: ${NOTION_API_TOKEN}
+    timeout: 30
+    retry:
+      max_attempts: 3
+      backoff_factor: 2
+  mount:
+    databases:
+      - database_id: ${NOTION_DATABASE_ID}
+        target_folder: posts
+        content_type: post
+        property_mapping:
+          title: Name
+          status: Status
+hugo:
+  directories:
+    root: blog
+    content: content
+    public: public
+deployment:
+  strategy: github_actions
+  github_actions:
+    branch: main
+security:
+  environment_variables:
+    use_env_vars: true
+metadata:
+  config_version: 2.0.0
