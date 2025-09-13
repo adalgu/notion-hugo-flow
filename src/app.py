@@ -1221,7 +1221,6 @@ def setup(
                                 # Offer to help create a database in the page
                                 try:
                                     import subprocess
-                                    import sys
 
                                     response = (
                                         input(
