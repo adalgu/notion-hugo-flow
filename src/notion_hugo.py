@@ -298,15 +298,39 @@ def process_databases_incremental(
         all_pages = []
 
         # 데이터베이스의 모든 페이지 메타데이터 조회
-        for page_result in iterate_paginated_api(
-            notion.databases.query, {"database_id": mount["database_id"]}
-        ):
-            page = cast(Dict[str, Any], page_result)
-            if page.get("object") != "page":
-                continue
+        try:
+            for page_result in iterate_paginated_api(
+                notion.databases.query, {"database_id": mount["database_id"]}
+            ):
+                page = cast(Dict[str, Any], page_result)
+                if page.get("object") != "page":
+                    continue
 
-            all_pages.append(page)
-            page_ids.append(page["id"])
+                all_pages.append(page)
+                page_ids.append(page["id"])
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[Warning] 데이터베이스 {mount['database_id']} 조회 중 오류 발생: {error_msg}")
+            
+            # 데이터베이스 ID 형식 확인
+            db_id = mount["database_id"]
+            if len(db_id.replace("-", "")) != 32:
+                print(f"[Error] 데이터베이스 ID 형식이 올바르지 않습니다: {db_id}")
+                print("[Info] 데이터베이스 ID는 32자리의 하이픈이 포함된 형식이어야 합니다")
+            
+            # Invalid request URL 에러에 대한 특별한 처리
+            if "Invalid request URL" in error_msg:
+                print("[Info] 이 오류는 데이터베이스에 접근할 수 없을 때 발생합니다")
+                print("[Info] 다음을 확인해 보세요:")
+                print("  1. 데이터베이스 ID가 정확한지 확인하세요")
+                print("  2. Notion 통합이 데이터베이스에 공유되어 있는지 확인하세요")
+                print("  3. 통합이 공유되지 않았다면, 데이터베이스에서 'Share' ��튼을 클릭하여 통합을 공유하세요")
+            
+            # 빈 결과 추가하여 계속 진행
+            results.append(
+                {"totalProcessed": 0, "success": [], "errors": [], "skipped": []}
+            )
+            continue
 
         # 변경된 페이지만 필터링
         changed_pages = metadata.get_changed_pages(all_pages)
@@ -564,7 +588,7 @@ def run_hugo_pipeline(
     hugo_args: Optional[List[str]] = None, build: bool = True
 ) -> Dict[str, Any]:
     """
-    Hugo 파이프라인을 실행합니다 (전처리 및 빌드).
+    Hugo 파이프라인을 ��행합니다 (전처리 및 빌드).
 
     Args:
         hugo_args: Hugo 명령줄 인수
@@ -613,15 +637,39 @@ def process_databases(notion: Client, config: Config) -> Dict[str, Any]:
         pages = []
 
         # 데이터베이스의 모든 페이지 조회
-        for page_result in iterate_paginated_api(
-            notion.databases.query, {"database_id": mount["database_id"]}
-        ):
-            page = cast(Dict[str, Any], page_result)
-            if page.get("object") != "page":
-                continue
+        try:
+            for page_result in iterate_paginated_api(
+                notion.databases.query, {"database_id": mount["database_id"]}
+            ):
+                page = cast(Dict[str, Any], page_result)
+                if page.get("object") != "page":
+                    continue
 
-            pages.append(page)
-            page_ids.append(page["id"])
+                pages.append(page)
+                page_ids.append(page["id"])
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[Warning] 데이터베이스 {mount['database_id']} 조회 중 오류 발생: {error_msg}")
+            
+            # 데이터베이스 ID 형식 확인
+            db_id = mount["database_id"]
+            if len(db_id.replace("-", "")) != 32:
+                print(f"[Error] 데이터베이스 ID 형식이 올바르지 않습니다: {db_id}")
+                print("[Info] 데이터베이스 ID는 32자리의 하이픈이 포함된 형식이어야 합니다")
+            
+            # Invalid request URL 에러에 대한 특별한 처리
+            if "Invalid request URL" in error_msg:
+                print("[Info] 이 오류는 데이터베이스에 접근할 수 없을 때 발생합니다")
+                print("[Info] 다음을 확인해 보세요:")
+                print("  1. 데이터베이스 ID가 정확한지 확인하세요")
+                print("  2. Notion 통합이 데이터베이스에 공유되어 있는지 확인하세요")
+                print("  3. 통합이 공유되지 않았다면, 데이터베이스에서 'Share' 버튼을 클릭하여 통합을 공유하세요")
+            
+            # 빈 결과 추가하여 계속 진행
+            results.append(
+                {"totalProcessed": 0, "success": [], "errors": [], "skipped": []}
+            )
+            continue
 
         if pages:
             print(
@@ -894,7 +942,7 @@ def run_migrate_database(
     source_db_id: str, parent_page_id: Optional[str], target_folder: str
 ) -> Dict[str, Any]:
     """
-    기존 노션 데이터베이스에서 마이그레이션합니다.
+    기존 노션 ���이터베이스에서 마이그레이션합니다.
 
     Args:
         source_db_id: 소스 데이터베이스 ID
@@ -1301,7 +1349,7 @@ def process_large_database_with_fallback(
 
         # Fallback이 활성화된 경우 시나리오 2로 전환
         if enable_fallback:
-            print("[Info] Fallback: 시나리오 2 (기본 동기화)로 전환")
+            print("[Info] Fallback: ��나리오 2 (기본 동기화)로 전환")
             fallback_result = process_databases_fallback(
                 notion, config, metadata, dry_run
             )
